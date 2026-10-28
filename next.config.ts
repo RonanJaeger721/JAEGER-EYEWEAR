@@ -1,6 +1,7 @@
 import type { NextConfig } from "next";
 const csp = `default-src 'self'; script-src 'self' 'unsafe-inline'${process.env.NODE_ENV === "development" ? " 'unsafe-eval'" : ""}; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://*.public.blob.vercel-storage.com; font-src 'self'; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'`;
 const config: NextConfig = {
+  experimental: { cpus: 2 },
   poweredByHeader: false,
   serverExternalPackages: ["postgres"],
   async headers() {
