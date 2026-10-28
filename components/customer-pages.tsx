@@ -1,21 +1,549 @@
-'use client';
-import {useState,useEffect} from 'react';
-import Link from 'next/link';
-import {useSearchParams} from 'next/navigation';
-import {signIn,signOut} from 'next-auth/react';
-import {ArrowUpRight,Check,ShieldCheck} from 'lucide-react';
-import {useStore,api,money,BagContents} from './store-provider';
-import type {Order} from '@/lib/types';
-type Me={user:{id:string;name:string;email:string;role:string};orders:Order[];subscribed:boolean};
-export function AccountPage({ordersOnly=false}:{ordersOnly?:boolean}){const {storageReady,notify}=useStore();const params=useSearchParams();const [me,setMe]=useState<Me|null>(null),[loaded,setLoaded]=useState(false),[register,setRegister]=useState(false),[error,setError]=useState(''),[busy,setBusy]=useState(false);
-useEffect(()=>{api('me').then(setMe).catch(()=>{}).finally(()=>setLoaded(true));},[]);
-if(!loaded)return <div className="empty">Opening your account…</div>;
-if(me)return <section className="section account-page"><span className="eyebrow">YOUR JAEGER WORLD</span><div className="section-heading"><h1>Hello, {me.user.name.split(' ')[0]}.</h1><button className="text-button" onClick={()=>signOut({callbackUrl:'/account'})}>Sign out</button></div><div className="account-links"><Link href="/orders">Your orders <ArrowUpRight size={18}/></Link><Link href="/shop">Explore eyewear <ArrowUpRight size={18}/></Link>{['admin','editor'].includes(me.user.role)&&<Link href="/admin">Open management <ArrowUpRight size={18}/></Link>}</div><div className="account-details"><h2>Your details</h2><p>{me.user.name}<br/>{me.user.email}</p><p>Newsletter: {me.subscribed?'Subscribed':'Not subscribed'}</p>{me.subscribed&&<button className="underlink" onClick={async()=>{try{await api('unsubscribe',{});setMe({...me,subscribed:false});notify('You have been unsubscribed.');}catch(e){notify((e as Error).message);}}}>Unsubscribe from newsletter</button>}</div><h2>{ordersOnly?'Your orders':'Recent orders'}</h2><OrderList orders={me.orders}/></section>;
-return <section className="auth-page"><div className="auth-intro"><span className="eyebrow">AN INDIVIDUAL POINT OF VIEW</span><h1>Your<br/>JAEGER world.</h1><p>A place for your collection, your orders<br/>and your next perspective.</p><img src="/media/square-0.svg" alt="Square silhouette concept"/></div><div className="auth-form"><span className="eyebrow">{register?'BECOME PART OF THE PERSPECTIVE':'WELCOME BACK'}</span><h2>{register?'Create your account.':'Sign in.'}</h2><form onSubmit={async e=>{e.preventDefault();setError('');setBusy(true);const data=Object.fromEntries(new FormData(e.currentTarget));try{if(register)await api('register',data);const r=await signIn('credentials',{email:data.email,password:data.password,redirect:false});if(r?.error)throw new Error('Unable to sign in. Check your details or try again later.');const dest=params.get('next');location.href=dest&&dest.startsWith('/')&&!dest.startsWith('//')?dest:'/account';}catch(e){setError((e as Error).message);}finally{setBusy(false);}}}>{register&&<label>Your name<input name="name" autoComplete="name" minLength={2} maxLength={100} required/></label>}<label>Email address<input name="email" type="email" autoComplete="email" required/></label><label>Password<input name="password" type="password" autoComplete={register?'new-password':'current-password'} minLength={register?12:1} maxLength={128} required/></label>{register&&<p className="muted">Use at least 12 characters. By creating an account you agree to the <Link href="/terms">terms</Link> and <Link href="/privacy">privacy notice</Link>.</p>}<p className="form-message" role="alert">{error||(!storageReady?'Account creation opens when the store database is connected.':'')}</p><button className="button full" disabled={busy||!storageReady}>{busy?'Please wait…':register?'Create account':'Sign in'}<ArrowUpRight size={17}/></button></form><button className="underlink" onClick={()=>{setRegister(!register);setError('');}}>{register?'Already have an account? Sign in':'New to JAEGER? Create an account'}</button><p className="muted">For account access assistance, <Link href="/contact">contact JAEGER</Link>.</p></div></section>;}
-export function OrderList({orders}:{orders:Order[]}){return orders.length?<div className="orders-list">{[...orders].reverse().map(o=><details key={o.id}><summary><span>J / {o.id.slice(0,8).toUpperCase()}<small>{new Date(o.createdAt).toLocaleDateString('en-GB')}{o.test?' · TEST ORDER':''}</small></span><span className="status">{o.payment.replaceAll('_',' ')}</span><strong>{money(o.total)}</strong></summary><div className="order-detail">{o.items.map(l=><p key={l.variantId}>{l.name} · {l.color} × {l.quantity}<span>{money(l.price*l.quantity)}</span></p>)}<p>Delivery<span>{money(o.shipping)}</span></p><p>{o.name}<br/>{o.address}<br/>{o.phone}</p><p>Fulfilment: {o.fulfilment}</p>{o.history.map((h,i)=><small key={i}>{new Date(h.at).toLocaleString('en-GB')} — {h.message}<br/></small>)}</div></details>)}</div>:<div className="empty bordered"><h3>Your collection starts here.</h3><p>You haven’t placed an order yet.</p><Link className="underlink" href="/shop">Explore eyewear <ArrowUpRight size={17}/></Link></div>;}
-export function CheckoutPage(){const {cart,products,settings,orderingOpen,clear}=useStore();const [me,setMe]=useState<Me|null>(null),[error,setError]=useState(''),[busy,setBusy]=useState(false),[order,setOrder]=useState<Order|null>(null),[key]=useState(()=>crypto.randomUUID()),[delivery,setDelivery]=useState('');
-useEffect(()=>{api('me').then(setMe).catch(()=>{});},[]);
-const concepts=cart.some(l=>{const p=products.find(p=>p.id===l.productId);return !p||p.concept||!p.verified||p.variants.find(v=>v.id===l.variantId)?.price===null;});const selected=settings.delivery.find(d=>d.id===delivery);const subtotal=cart.reduce((n,l)=>n+(products.find(p=>p.id===l.productId)?.variants.find(v=>v.id===l.variantId)?.price||0)*l.quantity,0);
-if(order)return <section className="confirmation section"><Check size={36}/><span className="eyebrow">ORDER RECORDED</span><h1>A new perspective<br/>is on its way.</h1><p>Order J / {order.id.slice(0,8).toUpperCase()}</p><div className="notice"><strong>Pending payment — {money(order.total)}</strong><p>Your order is saved. Stock is reserved for 24 hours. Payment must be independently verified by JAEGER before fulfilment.</p></div>{settings.whatsapp&&<a className="button" href={`https://wa.me/${settings.whatsapp}?text=${encodeURIComponent(`Hello JAEGER. Please assist with payment for order ${order.id}, total ${money(order.total)}. It is currently pending payment.`)}`} target="_blank" rel="noreferrer">Arrange payment on WhatsApp <ArrowUpRight size={17}/></a>}<Link className="underlink" href="/orders">View your orders</Link></section>;
-return <section className="section checkout"><div><span className="eyebrow">YOUR NEXT PERSPECTIVE</span><h1>Review your bag.</h1><p className="muted">USD · Zimbabwe · Manual order</p>{!cart.length?<Link href="/shop" className="button">Explore eyewear</Link>:concepts||!orderingOpen?<div className="notice"><h2>{concepts?'A first look. Not yet for sale.':'Ordering opens soon.'}</h2><p>{concepts?'Your bag includes concept frames. Prices, stock and product information need verification before these frames can be ordered.':'This is a pre-launch preview. Commercial orders are currently closed.'}</p><Link className="underlink" href="/#newsletter">Get collection announcements <ArrowUpRight size={16}/></Link></div>:!me?<div className="notice"><h2>Make it your perspective.</h2><p>Sign in to keep your order secure and track its progress.</p><Link href="/account?next=/checkout" className="button">Sign in to continue</Link></div>:<form className="checkout-form" onSubmit={async e=>{e.preventDefault();setBusy(true);setError('');try{const fields=Object.fromEntries(new FormData(e.currentTarget));const result=await api('orders',{...fields,email:me.user.email,lines:cart,key});setOrder(result.order);clear();}catch(e){setError((e as Error).message);}finally{setBusy(false);}}}><h2>Delivery details</h2><label>Full name<input name="name" autoComplete="name" defaultValue={me.user.name} required minLength={2}/></label><label>Email<input type="email" value={me.user.email} disabled/></label><label>Phone number<input name="phone" type="tel" autoComplete="tel" required minLength={7}/></label><label>Delivery address / collection details<textarea name="address" autoComplete="street-address" required minLength={5}/></label><label>Delivery method<select name="delivery" value={delivery} onChange={e=>setDelivery(e.target.value)} required><option value="">Choose delivery</option>{settings.delivery.filter(d=>d.enabled).map(d=><option value={d.id} key={d.id}>{d.name} — {money(d.price)}</option>)}</select></label><div className="notice"><ShieldCheck size={22}/><strong>Manual payment assistance</strong><p>No card information is collected. Your order will remain pending payment until the team verifies payment.</p></div><p>Total including selected delivery: <strong>{money(subtotal+(selected?.price||0))}</strong></p><label className="check"><input type="checkbox" required/>I agree to the current <Link href="/terms">terms</Link> and <Link href="/shipping-returns">delivery and returns information</Link>.</label><p role="alert" className="form-message">{error}</p><button className="button full" disabled={busy}>{busy?'Saving order…':'Place order — payment pending'}<ArrowUpRight size={17}/></button></form>}</div><aside><h2>Your selection</h2><BagContents/></aside></section>;}
-export function ContactPage(){const {settings}=useStore();const [message,setMessage]=useState(''),[busy,setBusy]=useState(false);return <section className="section contact-page"><div><span className="eyebrow">LET’S TALK PERSPECTIVE</span><h1>A closer<br/>connection.</h1><p>Questions about the first collection,<br/>the brand or a future collaboration?</p>{settings.email&&<a className="underlink" href={`mailto:${settings.email}`}>{settings.email}<ArrowUpRight size={17}/></a>}{settings.whatsapp&&<a className="underlink" href={`https://wa.me/${settings.whatsapp}`} target="_blank" rel="noreferrer">WhatsApp +{settings.whatsapp} <ArrowUpRight size={17}/></a>}</div><form onSubmit={async e=>{e.preventDefault();setBusy(true);const f=e.currentTarget;try{const r=await api('contact',Object.fromEntries(new FormData(f)));setMessage(r.message);f.reset();}catch(e){setMessage((e as Error).message);}finally{setBusy(false);}}}><label>Your name<input name="name" autoComplete="name" minLength={2} required/></label><label>Email address<input name="email" type="email" autoComplete="email" required/></label><label>Your message<textarea name="message" minLength={10} maxLength={3000} rows={5} required/></label><p className="muted">We use these details to respond to your enquiry. <Link href="/privacy">Privacy notice</Link></p><p className="form-message" role="status">{message}</p><button className="button full" disabled={busy}>{busy?'Saving…':'Send enquiry'}<ArrowUpRight size={17}/></button></form></section>;}
+"use client";
+import { useState, useEffect } from "react";
+import Link from "next/link";
+import { useSearchParams } from "next/navigation";
+import { signIn, signOut } from "next-auth/react";
+import { ArrowUpRight, Check, ShieldCheck } from "lucide-react";
+import { useStore, api, money, BagContents } from "./store-provider";
+import type { Order } from "@/lib/types";
+type Me = {
+  user: { id: string; name: string; email: string; role: string };
+  orders: Order[];
+  subscribed: boolean;
+};
+export function AccountPage({ ordersOnly = false }: { ordersOnly?: boolean }) {
+  const { storageReady, notify } = useStore();
+  const params = useSearchParams();
+  const [me, setMe] = useState<Me | null>(null),
+    [loaded, setLoaded] = useState(false),
+    [register, setRegister] = useState(false),
+    [error, setError] = useState(""),
+    [busy, setBusy] = useState(false);
+  useEffect(() => {
+    api("me")
+      .then(setMe)
+      .catch(() => {})
+      .finally(() => setLoaded(true));
+  }, []);
+  if (!loaded) return <div className="empty">Opening your account…</div>;
+  if (me)
+    return (
+      <section className="section account-page">
+        <span className="eyebrow">YOUR JAEGER WORLD</span>
+        <div className="section-heading">
+          <h1>Hello, {me.user.name.split(" ")[0]}.</h1>
+          <button
+            className="text-button"
+            onClick={() => signOut({ callbackUrl: "/account" })}
+          >
+            Sign out
+          </button>
+        </div>
+        <div className="account-links">
+          <Link href="/orders">
+            Your orders <ArrowUpRight size={18} />
+          </Link>
+          <Link href="/shop">
+            Explore eyewear <ArrowUpRight size={18} />
+          </Link>
+          {["admin", "editor"].includes(me.user.role) && (
+            <Link href="/admin">
+              Open management <ArrowUpRight size={18} />
+            </Link>
+          )}
+        </div>
+        <div className="account-details">
+          <h2>Your details</h2>
+          <p>
+            {me.user.name}
+            <br />
+            {me.user.email}
+          </p>
+          <p>Newsletter: {me.subscribed ? "Subscribed" : "Not subscribed"}</p>
+          {me.subscribed && (
+            <button
+              className="underlink"
+              onClick={async () => {
+                try {
+                  await api("unsubscribe", {});
+                  setMe({ ...me, subscribed: false });
+                  notify("You have been unsubscribed.");
+                } catch (e) {
+                  notify((e as Error).message);
+                }
+              }}
+            >
+              Unsubscribe from newsletter
+            </button>
+          )}
+        </div>
+        <h2>{ordersOnly ? "Your orders" : "Recent orders"}</h2>
+        <OrderList orders={me.orders} />
+      </section>
+    );
+  return (
+    <section className="auth-page">
+      <div className="auth-intro">
+        <span className="eyebrow">AN INDIVIDUAL POINT OF VIEW</span>
+        <h1>
+          Your
+          <br />
+          JAEGER world.
+        </h1>
+        <p>
+          A place for your collection, your orders
+          <br />
+          and your next perspective.
+        </p>
+        <img src="/media/square-0.svg" alt="Square silhouette concept" />
+      </div>
+      <div className="auth-form">
+        <span className="eyebrow">
+          {register ? "BECOME PART OF THE PERSPECTIVE" : "WELCOME BACK"}
+        </span>
+        <h2>{register ? "Create your account." : "Sign in."}</h2>
+        <form
+          onSubmit={async (e) => {
+            e.preventDefault();
+            setError("");
+            setBusy(true);
+            const data = Object.fromEntries(new FormData(e.currentTarget));
+            try {
+              if (register) await api("register", data);
+              const r = await signIn("credentials", {
+                email: data.email,
+                password: data.password,
+                redirect: false,
+              });
+              if (r?.error)
+                throw new Error(
+                  "Unable to sign in. Check your details or try again later.",
+                );
+              const dest = params.get("next");
+              location.href =
+                dest && dest.startsWith("/") && !dest.startsWith("//")
+                  ? dest
+                  : "/account";
+            } catch (e) {
+              setError((e as Error).message);
+            } finally {
+              setBusy(false);
+            }
+          }}
+        >
+          {register && (
+            <label>
+              Your name
+              <input
+                name="name"
+                autoComplete="name"
+                minLength={2}
+                maxLength={100}
+                required
+              />
+            </label>
+          )}
+          <label>
+            Email address
+            <input name="email" type="email" autoComplete="email" required />
+          </label>
+          <label>
+            Password
+            <input
+              name="password"
+              type="password"
+              autoComplete={register ? "new-password" : "current-password"}
+              minLength={register ? 12 : 1}
+              maxLength={128}
+              required
+            />
+          </label>
+          {register && (
+            <p className="muted">
+              Use at least 12 characters. By creating an account you agree to
+              the <Link href="/terms">terms</Link> and{" "}
+              <Link href="/privacy">privacy notice</Link>.
+            </p>
+          )}
+          <p className="form-message" role="alert">
+            {error ||
+              (!storageReady
+                ? "Account creation opens when the store database is connected."
+                : "")}
+          </p>
+          <button className="button full" disabled={busy || !storageReady}>
+            {busy ? "Please wait…" : register ? "Create account" : "Sign in"}
+            <ArrowUpRight size={17} />
+          </button>
+        </form>
+        <button
+          className="underlink"
+          onClick={() => {
+            setRegister(!register);
+            setError("");
+          }}
+        >
+          {register
+            ? "Already have an account? Sign in"
+            : "New to JAEGER? Create an account"}
+        </button>
+        <p className="muted">
+          For account access assistance,{" "}
+          <Link href="/contact">contact JAEGER</Link>.
+        </p>
+      </div>
+    </section>
+  );
+}
+export function OrderList({ orders }: { orders: Order[] }) {
+  return orders.length ? (
+    <div className="orders-list">
+      {[...orders].reverse().map((o) => (
+        <details key={o.id}>
+          <summary>
+            <span>
+              J / {o.id.slice(0, 8).toUpperCase()}
+              <small>
+                {new Date(o.createdAt).toLocaleDateString("en-GB")}
+                {o.test ? " · TEST ORDER" : ""}
+              </small>
+            </span>
+            <span className="status">{o.payment.replaceAll("_", " ")}</span>
+            <strong>{money(o.total)}</strong>
+          </summary>
+          <div className="order-detail">
+            {o.items.map((l) => (
+              <p key={l.variantId}>
+                {l.name} · {l.color} × {l.quantity}
+                <span>{money(l.price * l.quantity)}</span>
+              </p>
+            ))}
+            <p>
+              Delivery<span>{money(o.shipping)}</span>
+            </p>
+            <p>
+              {o.name}
+              <br />
+              {o.address}
+              <br />
+              {o.phone}
+            </p>
+            <p>Fulfilment: {o.fulfilment}</p>
+            {o.history.map((h, i) => (
+              <small key={i}>
+                {new Date(h.at).toLocaleString("en-GB")} — {h.message}
+                <br />
+              </small>
+            ))}
+          </div>
+        </details>
+      ))}
+    </div>
+  ) : (
+    <div className="empty bordered">
+      <h3>Your collection starts here.</h3>
+      <p>You haven’t placed an order yet.</p>
+      <Link className="underlink" href="/shop">
+        Explore eyewear <ArrowUpRight size={17} />
+      </Link>
+    </div>
+  );
+}
+export function CheckoutPage() {
+  const { cart, products, settings, orderingOpen, clear } = useStore();
+  const [me, setMe] = useState<Me | null>(null),
+    [error, setError] = useState(""),
+    [busy, setBusy] = useState(false),
+    [order, setOrder] = useState<Order | null>(null),
+    [key] = useState(() => crypto.randomUUID()),
+    [delivery, setDelivery] = useState("");
+  useEffect(() => {
+    api("me")
+      .then(setMe)
+      .catch(() => {});
+  }, []);
+  const concepts = cart.some((l) => {
+    const p = products.find((p) => p.id === l.productId);
+    return (
+      !p ||
+      p.concept ||
+      !p.verified ||
+      p.variants.find((v) => v.id === l.variantId)?.price === null
+    );
+  });
+  const selected = settings.delivery.find((d) => d.id === delivery);
+  const subtotal = cart.reduce(
+    (n, l) =>
+      n +
+      (products
+        .find((p) => p.id === l.productId)
+        ?.variants.find((v) => v.id === l.variantId)?.price || 0) *
+        l.quantity,
+    0,
+  );
+  if (order)
+    return (
+      <section className="confirmation section">
+        <Check size={36} />
+        <span className="eyebrow">ORDER RECORDED</span>
+        <h1>
+          A new perspective
+          <br />
+          is on its way.
+        </h1>
+        <p>Order J / {order.id.slice(0, 8).toUpperCase()}</p>
+        <div className="notice">
+          <strong>Pending payment — {money(order.total)}</strong>
+          <p>
+            Your order is saved. Stock is reserved for 24 hours. Payment must be
+            independently verified by JAEGER before fulfilment.
+          </p>
+        </div>
+        {settings.whatsapp && (
+          <a
+            className="button"
+            href={`https://wa.me/${settings.whatsapp}?text=${encodeURIComponent(`Hello JAEGER. Please assist with payment for order ${order.id}, total ${money(order.total)}. It is currently pending payment.`)}`}
+            target="_blank"
+            rel="noreferrer"
+          >
+            Arrange payment on WhatsApp <ArrowUpRight size={17} />
+          </a>
+        )}
+        <Link className="underlink" href="/orders">
+          View your orders
+        </Link>
+      </section>
+    );
+  return (
+    <section className="section checkout">
+      <div>
+        <span className="eyebrow">YOUR NEXT PERSPECTIVE</span>
+        <h1>Review your bag.</h1>
+        <p className="muted">USD · Zimbabwe · Manual order</p>
+        {!cart.length ? (
+          <Link href="/shop" className="button">
+            Explore eyewear
+          </Link>
+        ) : concepts || !orderingOpen ? (
+          <div className="notice">
+            <h2>
+              {concepts
+                ? "A first look. Not yet for sale."
+                : "Ordering opens soon."}
+            </h2>
+            <p>
+              {concepts
+                ? "Your bag includes concept frames. Prices, stock and product information need verification before these frames can be ordered."
+                : "This is a pre-launch preview. Commercial orders are currently closed."}
+            </p>
+            <Link className="underlink" href="/#newsletter">
+              Get collection announcements <ArrowUpRight size={16} />
+            </Link>
+          </div>
+        ) : !me ? (
+          <div className="notice">
+            <h2>Make it your perspective.</h2>
+            <p>Sign in to keep your order secure and track its progress.</p>
+            <Link href="/account?next=/checkout" className="button">
+              Sign in to continue
+            </Link>
+          </div>
+        ) : (
+          <form
+            className="checkout-form"
+            onSubmit={async (e) => {
+              e.preventDefault();
+              setBusy(true);
+              setError("");
+              try {
+                const fields = Object.fromEntries(
+                  new FormData(e.currentTarget),
+                );
+                const result = await api("orders", {
+                  ...fields,
+                  email: me.user.email,
+                  lines: cart,
+                  key,
+                });
+                setOrder(result.order);
+                clear();
+              } catch (e) {
+                setError((e as Error).message);
+              } finally {
+                setBusy(false);
+              }
+            }}
+          >
+            <h2>Delivery details</h2>
+            <label>
+              Full name
+              <input
+                name="name"
+                autoComplete="name"
+                defaultValue={me.user.name}
+                required
+                minLength={2}
+              />
+            </label>
+            <label>
+              Email
+              <input type="email" value={me.user.email} disabled />
+            </label>
+            <label>
+              Phone number
+              <input
+                name="phone"
+                type="tel"
+                autoComplete="tel"
+                required
+                minLength={7}
+              />
+            </label>
+            <label>
+              Delivery address / collection details
+              <textarea
+                name="address"
+                autoComplete="street-address"
+                required
+                minLength={5}
+              />
+            </label>
+            <label>
+              Delivery method
+              <select
+                name="delivery"
+                value={delivery}
+                onChange={(e) => setDelivery(e.target.value)}
+                required
+              >
+                <option value="">Choose delivery</option>
+                {settings.delivery
+                  .filter((d) => d.enabled)
+                  .map((d) => (
+                    <option value={d.id} key={d.id}>
+                      {d.name} — {money(d.price)}
+                    </option>
+                  ))}
+              </select>
+            </label>
+            <div className="notice">
+              <ShieldCheck size={22} />
+              <strong>Manual payment assistance</strong>
+              <p>
+                No card information is collected. Your order will remain pending
+                payment until the team verifies payment.
+              </p>
+            </div>
+            <p>
+              Total including selected delivery:{" "}
+              <strong>{money(subtotal + (selected?.price || 0))}</strong>
+            </p>
+            <label className="check">
+              <input type="checkbox" required />I agree to the current{" "}
+              <Link href="/terms">terms</Link> and{" "}
+              <Link href="/shipping-returns">
+                delivery and returns information
+              </Link>
+              .
+            </label>
+            <p role="alert" className="form-message">
+              {error}
+            </p>
+            <button className="button full" disabled={busy}>
+              {busy ? "Saving order…" : "Place order — payment pending"}
+              <ArrowUpRight size={17} />
+            </button>
+          </form>
+        )}
+      </div>
+      <aside>
+        <h2>Your selection</h2>
+        <BagContents />
+      </aside>
+    </section>
+  );
+}
+export function ContactPage() {
+  const { settings } = useStore();
+  const [message, setMessage] = useState(""),
+    [busy, setBusy] = useState(false);
+  return (
+    <section className="section contact-page">
+      <div>
+        <span className="eyebrow">LET’S TALK PERSPECTIVE</span>
+        <h1>
+          A closer
+          <br />
+          connection.
+        </h1>
+        <p>
+          Questions about the first collection,
+          <br />
+          the brand or a future collaboration?
+        </p>
+        {settings.email && (
+          <a className="underlink" href={`mailto:${settings.email}`}>
+            {settings.email}
+            <ArrowUpRight size={17} />
+          </a>
+        )}
+        {settings.whatsapp && (
+          <a
+            className="underlink"
+            href={`https://wa.me/${settings.whatsapp}`}
+            target="_blank"
+            rel="noreferrer"
+          >
+            WhatsApp +{settings.whatsapp} <ArrowUpRight size={17} />
+          </a>
+        )}
+      </div>
+      <form
+        onSubmit={async (e) => {
+          e.preventDefault();
+          setBusy(true);
+          const f = e.currentTarget;
+          try {
+            const r = await api("contact", Object.fromEntries(new FormData(f)));
+            setMessage(r.message);
+            f.reset();
+          } catch (e) {
+            setMessage((e as Error).message);
+          } finally {
+            setBusy(false);
+          }
+        }}
+      >
+        <label>
+          Your name
+          <input name="name" autoComplete="name" minLength={2} required />
+        </label>
+        <label>
+          Email address
+          <input name="email" type="email" autoComplete="email" required />
+        </label>
+        <label>
+          Your message
+          <textarea
+            name="message"
+            minLength={10}
+            maxLength={3000}
+            rows={5}
+            required
+          />
+        </label>
+        <p className="muted">
+          We use these details to respond to your enquiry.{" "}
+          <Link href="/privacy">Privacy notice</Link>
+        </p>
+        <p className="form-message" role="status">
+          {message}
+        </p>
+        <button className="button full" disabled={busy}>
+          {busy ? "Saving…" : "Send enquiry"}
+          <ArrowUpRight size={17} />
+        </button>
+      </form>
+    </section>
+  );
+}

@@ -1,8 +1,116 @@
-import { z } from 'zod';
-const text=z.string().trim().max(4000);
-const image=z.string().max(2000).refine(v=>v.startsWith('/media/')||v.startsWith('/uploads/')||/^https:\/\/[a-z0-9.-]+\.public\.blob\.vercel-storage\.com\//.test(v),'Use an uploaded image or a local media path.');
-export const variantSchema=z.object({id:z.string().min(1).max(80),color:text.min(1),hex:z.string().regex(/^#[0-9a-fA-F]{6}$/),lens:text,images:z.array(image).min(1).max(12),price:z.number().int().min(1).max(100000000).nullable(),stock:z.number().int().min(0).max(100000),material:text,measurements:z.object({lens:z.number().min(1).max(100),bridge:z.number().min(1).max(50),temple:z.number().min(50).max(250)}).optional(),uv:text.optional()});
-export const productSchema=z.object({id:z.string().regex(/^[a-z0-9-]+$/).max(80),slug:z.string().regex(/^[a-z0-9-]+$/).max(80),name:text.min(1),category:z.enum(['sunglasses','optical']),shape:z.string().min(1).max(60),description:text,concept:z.boolean(),verified:z.boolean(),featured:z.boolean(),newArrival:z.boolean(),archived:z.boolean(),variants:z.array(variantSchema).min(1).max(20)});
-export const collectionSchema=z.object({id:z.string().regex(/^[a-z0-9-]+$/).max(80),name:text.min(1),description:text,image,products:z.array(z.string().max(80)).max(200),order:z.number().int().min(0).max(1000)});
-export const settingsSchema=z.object({announcement:text,heroTitle:text.min(1),heroCopy:text,heroImage:image,campaignImage:image,whatsapp:z.string().regex(/^$|^\d{10,15}$/),email:z.union([z.email(),z.literal('')]),instagram:z.union([z.url().startsWith('https://www.instagram.com/'),z.literal('')]),tiktok:z.union([z.url().startsWith('https://www.tiktok.com/'),z.literal('')]),launchApproved:z.boolean(),manualOrdersEnabled:z.boolean(),delivery:z.array(z.object({id:z.string().max(80),name:text,price:z.number().int().min(0).max(10000000),enabled:z.boolean()})).max(20),faqs:z.array(z.object({question:text,answer:text})).max(40),shipping:text,returns:text,privacy:text,terms:text});
-export const orderSchema=z.object({key:z.uuid(),lines:z.array(z.object({productId:z.string().max(80),variantId:z.string().max(80),quantity:z.number().int().min(1).max(10)})).min(1).max(50),name:z.string().trim().min(2).max(120),email:z.email().max(254).transform(v=>v.toLowerCase()),phone:z.string().trim().min(7).max(30),address:z.string().trim().min(5).max(600),delivery:z.string().max(80)});
+import { z } from "zod";
+const text = z.string().trim().max(4000);
+const image = z
+  .string()
+  .max(2000)
+  .refine(
+    (v) =>
+      v.startsWith("/media/") ||
+      v.startsWith("/uploads/") ||
+      /^https:\/\/[a-z0-9.-]+\.public\.blob\.vercel-storage\.com\//.test(v),
+    "Use an uploaded image or a local media path.",
+  );
+export const variantSchema = z.object({
+  id: z.string().min(1).max(80),
+  color: text.min(1),
+  hex: z.string().regex(/^#[0-9a-fA-F]{6}$/),
+  lens: text,
+  images: z.array(image).min(1).max(12),
+  price: z.number().int().min(1).max(100000000).nullable(),
+  stock: z.number().int().min(0).max(100000),
+  material: text,
+  measurements: z
+    .object({
+      lens: z.number().min(1).max(100),
+      bridge: z.number().min(1).max(50),
+      temple: z.number().min(50).max(250),
+    })
+    .optional(),
+  uv: text.optional(),
+});
+export const productSchema = z.object({
+  id: z
+    .string()
+    .regex(/^[a-z0-9-]+$/)
+    .max(80),
+  slug: z
+    .string()
+    .regex(/^[a-z0-9-]+$/)
+    .max(80),
+  name: text.min(1),
+  category: z.enum(["sunglasses", "optical"]),
+  shape: z.string().min(1).max(60),
+  description: text,
+  concept: z.boolean(),
+  verified: z.boolean(),
+  featured: z.boolean(),
+  newArrival: z.boolean(),
+  archived: z.boolean(),
+  variants: z.array(variantSchema).min(1).max(20),
+});
+export const collectionSchema = z.object({
+  id: z
+    .string()
+    .regex(/^[a-z0-9-]+$/)
+    .max(80),
+  name: text.min(1),
+  description: text,
+  image,
+  products: z.array(z.string().max(80)).max(200),
+  order: z.number().int().min(0).max(1000),
+});
+export const settingsSchema = z.object({
+  announcement: text,
+  heroTitle: text.min(1),
+  heroCopy: text,
+  heroImage: image,
+  campaignImage: image,
+  whatsapp: z.string().regex(/^$|^\d{10,15}$/),
+  email: z.union([z.email(), z.literal("")]),
+  instagram: z.union([
+    z.url().startsWith("https://www.instagram.com/"),
+    z.literal(""),
+  ]),
+  tiktok: z.union([
+    z.url().startsWith("https://www.tiktok.com/"),
+    z.literal(""),
+  ]),
+  launchApproved: z.boolean(),
+  manualOrdersEnabled: z.boolean(),
+  delivery: z
+    .array(
+      z.object({
+        id: z.string().max(80),
+        name: text,
+        price: z.number().int().min(0).max(10000000),
+        enabled: z.boolean(),
+      }),
+    )
+    .max(20),
+  faqs: z.array(z.object({ question: text, answer: text })).max(40),
+  shipping: text,
+  returns: text,
+  privacy: text,
+  terms: text,
+});
+export const orderSchema = z.object({
+  key: z.uuid(),
+  lines: z
+    .array(
+      z.object({
+        productId: z.string().max(80),
+        variantId: z.string().max(80),
+        quantity: z.number().int().min(1).max(10),
+      }),
+    )
+    .min(1)
+    .max(50),
+  name: z.string().trim().min(2).max(120),
+  email: z
+    .email()
+    .max(254)
+    .transform((v) => v.toLowerCase()),
+  phone: z.string().trim().min(7).max(30),
+  address: z.string().trim().min(5).max(600),
+  delivery: z.string().max(80),
+});
