@@ -2,7 +2,7 @@ import postgres from "postgres";
 import { DatabaseSync } from "node:sqlite";
 import { mkdirSync } from "node:fs";
 import path from "node:path";
-import { initialState } from "./seed";
+import { initialState, upgradeState } from "./seed";
 import { releaseExpired } from "./commerce";
 import type { State } from "./types";
 
@@ -43,6 +43,7 @@ export async function readState(): Promise<State> {
     const rows = await sql`SELECT data FROM jaeger_store WHERE id=1`;
     const state = rows[0].data as State;
     if (
+      state.version < 3 ||
       state.orders.some(
         (o) =>
           o.payment === "pending_payment" &&
@@ -64,6 +65,7 @@ export async function readState(): Promise<State> {
     ).data,
   ) as State;
   if (
+    state.version < 3 ||
     state.orders.some(
       (o) =>
         o.payment === "pending_payment" &&
@@ -87,6 +89,7 @@ export async function mutate<T>(fn: (state: State) => T): Promise<T> {
       const rows =
         await tx`SELECT data FROM jaeger_store WHERE id=1 FOR UPDATE`;
       const state = rows[0].data as State;
+      upgradeState(state);
       const result = fn(state);
       await tx`UPDATE jaeger_store SET data=${JSON.stringify(state)}::jsonb WHERE id=1`;
       return result;
@@ -102,6 +105,7 @@ export async function mutate<T>(fn: (state: State) => T): Promise<T> {
         }
       ).data,
     ) as State;
+    upgradeState(s);
     const result = fn(s);
     db.prepare("UPDATE store SET data=? WHERE id=1").run(JSON.stringify(s));
     db.exec("COMMIT");

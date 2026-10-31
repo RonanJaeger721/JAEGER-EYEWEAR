@@ -145,7 +145,10 @@ export function AdminDashboard() {
     );
   const paid = data.orders.filter((o) => o.payment === "paid" && !o.test);
   const low = data.products.filter(
-    (p) => !p.concept && p.variants.some((v) => v.stock < 5),
+    (p) =>
+      !p.concept &&
+      p.inventoryConfirmed !== false &&
+      p.variants.some((v) => v.stock < 5),
   );
   const top = data.products
     .map((p) => ({
@@ -773,6 +776,13 @@ function ProductEditor({
         />
       </label>
       <label>
+        Brand
+        <input
+          value={p.brand || ""}
+          onChange={(e) => update("brand", e.target.value)}
+        />
+      </label>
+      <label>
         URL slug
         <input
           value={p.slug}
@@ -826,6 +836,7 @@ function ProductEditor({
       {[
         ["concept", "Concept / not for sale"],
         ["verified", "Supplier & imagery verified"],
+        ["inventoryConfirmed", "Stock quantities confirmed"],
         ["featured", "Featured on homepage"],
         ["newArrival", "New arrival"],
         ["archived", "Archive product"],
@@ -833,7 +844,7 @@ function ProductEditor({
         <label className="check" key={key}>
           <input
             type="checkbox"
-            checked={p[key as keyof Product] as boolean}
+            checked={Boolean(p[key as keyof Product])}
             onChange={(e) => update(key, e.target.checked)}
           />
           {label}

@@ -1,0 +1,242 @@
+[
+  {
+    "asset": "/media/street-rayban.webp",
+    "source": "Supplied assets/WhatsApp Image 2026-11-01 at 00.46.03 (1).jpeg",
+    "crop": "full photograph",
+    "method": "Direct photographic crop/resize only; no generated pixels, no erased marks."
+  },
+  {
+    "asset": "/media/street-rayban-front.webp",
+    "source": "Supplied assets/WhatsApp Image 2026-11-01 at 00.46.04.jpeg",
+    "crop": "full photograph",
+    "method": "Direct photographic crop/resize only; no generated pixels, no erased marks."
+  },
+  {
+    "asset": "/media/street-miumiu.webp",
+    "source": "Supplied assets/WhatsApp Image 2026-11-01 at 00.46.05.jpeg",
+    "crop": "full photograph",
+    "method": "Direct photographic crop/resize only; no generated pixels, no erased marks."
+  },
+  {
+    "asset": "/media/street-dior.webp",
+    "source": "Supplied assets/WhatsApp Image 2026-11-01 at 00.46.03.jpeg",
+    "crop": "full photograph",
+    "method": "Direct photographic crop/resize only; no generated pixels, no erased marks."
+  },
+  {
+    "asset": "/media/friends-edit.webp",
+    "source": "Supplied assets/WhatsApp Image 2026-11-01 at 00.46.11.jpeg",
+    "crop": "full photograph",
+    "method": "Direct photographic crop/resize only; no generated pixels, no erased marks."
+  },
+  {
+    "asset": "/media/two-perspectives.webp",
+    "source": "Supplied assets/WhatsApp Image 2026-11-01 at 00.46.02.jpeg",
+    "crop": "full photograph",
+    "method": "Direct photographic crop/resize only; no generated pixels, no erased marks."
+  },
+  {
+    "asset": "/media/rb-angular-black.webp",
+    "source": "Supplied assets/WhatsApp Image 2026-11-01 at 00.46.05 (1).jpeg",
+    "crop": [
+      0.02,
+      0.1,
+      0.96,
+      0.7
+    ],
+    "method": "Direct photographic crop/resize only; no generated pixels, no erased marks."
+  },
+  {
+    "asset": "/media/rb-angular-detail.webp",
+    "source": "Supplied assets/WhatsApp Image 2026-11-01 at 00.46.06.jpeg",
+    "crop": [
+      0,
+      0.25,
+      1,
+      0.33
+    ],
+    "method": "Direct photographic crop/resize only; no generated pixels, no erased marks."
+  },
+  {
+    "asset": "/media/rb-table-angle.webp",
+    "source": "Supplied assets/WhatsApp Image 2026-11-01 at 00.46.09.jpeg",
+    "crop": [
+      0.29,
+      0,
+      0.71,
+      0.92
+    ],
+    "method": "Direct photographic crop/resize only; no generated pixels, no erased marks."
+  },
+  {
+    "asset": "/media/miu-metal-rectangle.webp",
+    "source": "Supplied assets/WhatsApp Image 2026-11-01 at 00.46.07.jpeg",
+    "crop": [
+      0.1,
+      0.055,
+      0.78,
+      0.27
+    ],
+    "method": "Direct photographic crop/resize only; no generated pixels, no erased marks."
+  },
+  {
+    "asset": "/media/dior-square-worn.webp",
+    "source": "Supplied assets/WhatsApp Image 2026-11-01 at 00.46.03.jpeg",
+    "crop": [
+      0,
+      0.29,
+      0.96,
+      0.34
+    ],
+    "method": "Direct photographic crop/resize only; no generated pixels, no erased marks."
+  },
+  {
+    "asset": "/media/metal-rectangle-worn.webp",
+    "source": "Supplied assets/WhatsApp Image 2026-11-01 at 00.46.11.jpeg",
+    "crop": [
+      0.27,
+      0.48,
+      0.41,
+      0.18
+    ],
+    "method": "Direct photographic crop/resize only; no generated pixels, no erased marks."
+  },
+  {
+    "asset": "/media/rb-square-black.webp",
+    "source": "Supplied assets/JAEGER MEDIA/Jaeger Eyewear/WhatsApp Image 2026-10-29 at 00.27.53 (2).jpeg",
+    "crop": [
+      0.14,
+      0.43,
+      0.38,
+      0.22
+    ],
+    "method": "Direct photographic crop/resize only; no generated pixels, no erased marks."
+  },
+  {
+    "asset": "/media/rb-cat-eye-black.webp",
+    "source": "Supplied assets/JAEGER MEDIA/Jaeger Eyewear/WhatsApp Image 2026-10-29 at 00.27.53 (2).jpeg",
+    "crop": [
+      0.53,
+      0.17,
+      0.44,
+      0.25
+    ],
+    "method": "Direct photographic crop/resize only; no generated pixels, no erased marks."
+  },
+  {
+    "asset": "/media/rb-rectangle-black.webp",
+    "source": "Supplied assets/JAEGER MEDIA/Jaeger Eyewear/WhatsApp Image 2026-10-29 at 00.27.53 (2).jpeg",
+    "crop": [
+      0.16,
+      0.67,
+      0.33,
+      0.2
+    ],
+    "method": "Direct photographic crop/resize only; no generated pixels, no erased marks."
+  },
+  {
+    "asset": "/media/porsche-metal-aviator.webp",
+    "source": "Supplied assets/JAEGER MEDIA/Jaeger Eyewear/WhatsApp Image 2026-10-29 at 00.27.53 (2).jpeg",
+    "crop": [
+      0.12,
+      0.16,
+      0.37,
+      0.24
+    ],
+    "method": "Direct photographic crop/resize only; no generated pixels, no erased marks."
+  },
+  {
+    "asset": "/media/rb-purple-rectangle.webp",
+    "source": "Supplied assets/JAEGER MEDIA/Jaeger Eyewear/WhatsApp Image 2026-10-29 at 00.27.52 (3).jpeg",
+    "crop": [
+      0.55,
+      0.61,
+      0.36,
+      0.19
+    ],
+    "method": "Direct photographic crop/resize only; no generated pixels, no erased marks."
+  },
+  {
+    "asset": "/media/dior-blue-square.webp",
+    "source": "Supplied assets/JAEGER MEDIA/Jaeger Eyewear/WhatsApp Image 2026-10-29 at 00.27.52.jpeg",
+    "crop": {
+      "left": 389,
+      "top": 637,
+      "width": 413,
+      "height": 173
+    },
+    "method": "Direct photographic crop/resize only; no generated pixels, no erased marks."
+  },
+  {
+    "asset": "/media/prada-blue-shield.webp",
+    "source": "Supplied assets/JAEGER MEDIA/Jaeger Eyewear/WhatsApp Image 2026-10-29 at 00.27.47 (1).jpeg",
+    "crop": [
+      0.025,
+      0.48,
+      0.34,
+      0.36
+    ],
+    "method": "Direct photographic crop/resize only; no generated pixels, no erased marks."
+  },
+  {
+    "asset": "/media/versace-optical-black.webp",
+    "source": "Supplied assets/JAEGER MEDIA/Jaeger Eyewear/WhatsApp Image 2026-10-29 at 00.27.47 (2).jpeg",
+    "crop": [
+      0.27,
+      0.12,
+      0.49,
+      0.4
+    ],
+    "method": "Direct photographic crop/resize only; no generated pixels, no erased marks."
+  },
+  {
+    "asset": "/media/gucci-optical-cat-eye.webp",
+    "source": "Supplied assets/JAEGER MEDIA/Jaeger Eyewear/WhatsApp Image 2026-10-29 at 00.27.47 (2).jpeg",
+    "crop": [
+      0.22,
+      0.64,
+      0.55,
+      0.35
+    ],
+    "method": "Direct photographic crop/resize only; no generated pixels, no erased marks."
+  },
+  {
+    "asset": "/media/fendi-tortoise-rectangle.webp",
+    "source": "Supplied assets/JAEGER MEDIA/Jaeger Eyewear/WhatsApp Image 2026-10-29 at 00.27.46 (2).jpeg",
+    "crop": [
+      0.16,
+      0.34,
+      0.64,
+      0.5
+    ],
+    "method": "Direct photographic crop/resize only; no generated pixels, no erased marks."
+  },
+  {
+    "asset": "/media/gucci-black-square.webp",
+    "source": "Supplied assets/JAEGER MEDIA/Jaeger Eyewear/WhatsApp Image 2026-10-29 at 00.27.48.jpeg",
+    "crop": [
+      0,
+      0.21,
+      0.83,
+      0.29
+    ],
+    "method": "Direct photographic crop/resize only; no generated pixels, no erased marks."
+  },
+  {
+    "asset": "/media/versace-bone-square.webp",
+    "source": "Supplied assets/JAEGER MEDIA/Jaeger Eyewear/WhatsApp Image 2026-10-29 at 00.27.48.jpeg",
+    "crop": [
+      0.035,
+      0.52,
+      0.84,
+      0.39
+    ],
+    "method": "Direct photographic crop/resize only; no generated pixels, no erased marks."
+  },
+  {
+    "asset": "/media/showroom-edit.webp",
+    "source": "Supplied assets/JAEGER MEDIA/Jaeger Eyewear/WhatsApp Image 2026-10-29 at 00.27.53 (2).jpeg",
+    "crop": "full photograph",
+    "method": "Direct photographic crop/resize only; no generated pixels, no erased marks."
+  }
+]

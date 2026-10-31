@@ -14,6 +14,8 @@ export type Product = {
   id: string;
   slug: string;
   name: string;
+  brand?: string;
+  inventoryConfirmed?: boolean;
   category: "sunglasses" | "optical";
   shape: string;
   description: string;
@@ -41,7 +43,13 @@ export type User = {
   disabled: boolean;
 };
 export type Line = { productId: string; variantId: string; quantity: number };
-export type OrderItem = Line & { name: string; color: string; price: number };
+export type OrderItem = Line & {
+  name: string;
+  color: string;
+  price: number;
+  discount?: number;
+  introQuantity?: number;
+};
 export type Order = {
   id: string;
   key: string;

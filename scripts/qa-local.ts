@@ -134,13 +134,15 @@ try {
   fixture.slug = fixture.id;
   fixture.name = "LOCAL QA TEST FRAME — NOT INVENTORY";
   fixture.concept = false;
+  fixture.archived = false;
   fixture.verified = true;
+  fixture.inventoryConfirmed = true;
   fixture.variants = [
     {
       ...fixture.variants[0],
       id: "qa-variant-" + suffix,
-      price: 4500,
-      stock: 3,
+      price: 6000,
+      stock: 5,
       images: ["/media/founder.webp"],
     },
   ];
@@ -181,9 +183,10 @@ try {
     total: 1,
   };
   const placed = await customer.call("/api/store/orders", orderInput);
-  assert.equal(placed.status, 200);
+  assert.equal(placed.status, 200, JSON.stringify(placed.data));
   assert.equal(placed.data.order.payment, "pending_payment");
-  assert.equal(placed.data.order.total, 9500);
+  assert.equal(placed.data.order.total, 10500);
+  assert.equal(placed.data.order.items[0].introQuantity, 2);
   const id = placed.data.order.id;
   assert.equal(
     (await customer.call("/api/store/orders", orderInput)).data.order.id,
@@ -194,6 +197,7 @@ try {
   );
   const oversell = await customer.call("/api/store/orders", {
     ...orderInput,
+    lines: [{ ...orderInput.lines[0], quantity: 6 }],
     key: randomUUID(),
   });
   assert.equal(oversell.status, 400);
@@ -229,6 +233,34 @@ try {
     200,
   );
   ok("Only admin verifies payment and fulfilment");
+  const simultaneous = await Promise.all(
+    [1, 2].map(() =>
+      customer.call("/api/store/orders", {
+        ...orderInput,
+        key: randomUUID(),
+        lines: [{ ...orderInput.lines[0], quantity: 1 }],
+      }),
+    ),
+  );
+  assert.deepEqual(
+    simultaneous.map((r) => r.status),
+    [200, 200],
+  );
+  assert.deepEqual(
+    simultaneous.map((r) => r.data.order.total).sort((a, b) => a - b),
+    [5500, 6500],
+  );
+  const allOrders = (await customer.call("/api/store/me")).data.orders;
+  assert.equal(
+    allOrders.reduce(
+      (sum: number, o: { items: { introQuantity?: number }[] }) =>
+        sum + o.items.reduce((n, l) => n + (l.introQuantity || 0), 0),
+      0,
+    ),
+    3,
+  );
+  ok("Simultaneous order requests cannot exceed three launch-offer pairs");
+
   assert.equal(
     (
       await customer.call("/api/store/newsletter", {

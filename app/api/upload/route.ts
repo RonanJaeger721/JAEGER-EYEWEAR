@@ -47,9 +47,9 @@ export async function POST(req: NextRequest) {
         await put(name, data, { access: "public", contentType: "image/webp" })
       ).url;
     else if (!process.env.VERCEL) {
-      await mkdir("public/uploads", { recursive: true });
+      await mkdir(".data/uploads", { recursive: true });
       url = `/uploads/${randomUUID()}.webp`;
-      await writeFile(`public${url}`, data);
+      await writeFile(`.data${url}`, data);
     } else throw new Error("Cloud image storage is not configured.");
     return NextResponse.json({ url });
   } catch (e) {

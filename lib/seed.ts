@@ -1,88 +1,10 @@
-import type { State, Product } from "./types";
-const definitions = [
-  [
-    "rectangle",
-    "The Rectangle",
-    "sunglasses",
-    "A precise, elongated silhouette. Quiet from a distance. Distinctive up close.",
-    ["Gloss black", "Dark tortoise", "Smoked transparent"],
-  ],
-  [
-    "square",
-    "The Square",
-    "sunglasses",
-    "A strong outline. A considered point of view.",
-    ["Black", "Espresso", "Transparent smoke"],
-  ],
-  [
-    "aviator",
-    "The Aviator",
-    "sunglasses",
-    "A familiar form, explored through a contemporary lens.",
-    ["Silver", "Black metal", "Gold-tone"],
-  ],
-  [
-    "cat-eye",
-    "The Cat Eye",
-    "optical",
-    "An upward line with an unmistakable attitude.",
-    ["Black", "Tortoise", "Burgundy"],
-  ],
-  [
-    "statement",
-    "The Statement",
-    "sunglasses",
-    "Sculptural proportions for a more expressive perspective.",
-    ["Black", "Bone", "Smoke"],
-  ],
-] as const;
-export const products: Product[] = definitions.map(
-  ([shape, name, category, description, colors], i) => ({
-    id: shape,
-    slug: shape,
-    name,
-    category,
-    shape,
-    description,
-    concept: true,
-    verified: false,
-    featured: true,
-    newArrival: i < 3,
-    archived: false,
-    variants: colors.map((color, j) => ({
-      id: `${shape}-${j}`,
-      color,
-      hex:
-        shape === "aviator"
-          ? ["#a9aaa7", "#171717", "#ad9060"][j]
-          : shape === "cat-eye" && j === 2
-            ? "#53232b"
-            : j === 0
-              ? "#151515"
-              : j === 1
-                ? shape === "statement"
-                  ? "#d9d3c7"
-                  : "#4b3125"
-                : "#77706c",
-      lens: category === "optical" ? "Clear concept" : "Smoke concept",
-      images: [`/media/${shape}-${j}.svg`],
-      price: null,
-      stock: 0,
-      material: "Unconfirmed",
-    })),
-  }),
-);
+import type { State } from "./types";
+import { realProducts, realCollections } from "./real-catalog";
+export const products = realProducts;
 export const initialState = (): State => ({
-  version: 1,
+  version: 3,
   products: structuredClone(products),
-  collections: definitions.map(([id, name, , ,], i) => ({
-    id,
-    name: `00${i + 1} — ${name}`,
-    description: products[i].description,
-    image: `/media/${id}-0.svg`,
-    products: [id],
-    order: i,
-  })),
+  collections: structuredClone(realCollections),
   users: [],
   orders: [],
   subscribers: [],
@@ -90,11 +12,13 @@ export const initialState = (): State => ({
   attempts: {},
   audit: [],
   settings: {
-    announcement: "COLLECTION 001 — A FIRST LOOK AT A DIFFERENT PERSPECTIVE",
+    announcement:
+      "RAY-BAN $60 · SELECTED STYLES UP TO $120 · FIRST 3 PAIRS $50",
     heroTitle: "A DIFFERENT\nPERSPECTIVE.",
-    heroCopy: "Eyewear designed to make a statement without saying a word.",
-    heroImage: "/media/campaign.webp",
-    campaignImage: "/media/founder.webp",
+    heroCopy:
+      "Original eyewear from multiple original brands. Curated for confidence, character and distinctive style.",
+    heroImage: "/media/street-rayban.webp",
+    campaignImage: "/media/two-perspectives.webp",
     whatsapp: "263780774428",
     email: "ronanjaeger721@gmail.com",
     instagram: "",
@@ -111,33 +35,66 @@ export const initialState = (): State => ({
     ],
     faqs: [
       {
-        question: "When can I shop the collection?",
+        question: "What does JAEGER EYEWEAR offer?",
         answer:
-          "Collection 001 is in development. Join the newsletter for collection announcements. Prices, availability and product details will be confirmed before orders open.",
+          "A curated selection of original eyewear from multiple original brands. JAEGER EYEWEAR is the curator, not the manufacturer of these branded frames.",
       },
       {
-        question: "Are these confirmed JAEGER products?",
+        question: "How much are the glasses?",
         answer:
-          "The illustrated frames are proposed silhouettes, clearly marked as concepts. They are not confirmed stock or representations of third-party branded frames.",
+          "Ray-Ban pairs are $60. Selected styles from the other brands go up to $120; confirm the exact price for your chosen frame with the team. The first three pairs sold qualify for our $50 launch offer, subject to the remaining allocation.",
       },
       {
-        question: "Will prescription lenses be available?",
+        question: "How do I check availability?",
         answer:
-          "Optical frames and prescription fulfilment are subject to verified supplier information and suitable fulfilment arrangements.",
+          "Choose a frame and use its WhatsApp enquiry, or save your selection to your bag and enquire together. The team confirms the exact model, price and availability. An enquiry is not a paid order or a stock reservation.",
       },
       {
-        question: "How will payment work?",
+        question: "Are prescription lenses available?",
         answer:
-          "No online payment provider is connected. When approved ordering opens, manual orders remain pending payment until independently verified.",
+          "Optical frames are shown in the collection. Prescription lenses and fulfilment arrangements must be confirmed separately; no prescription service is assumed.",
+      },
+      {
+        question: "How does the $50 launch offer work?",
+        answer:
+          "The first three pairs sold are $50 each. Eligible saved orders reserve offer allocation alongside stock for 24 hours. Unpaid expired or cancelled orders release it. A WhatsApp enquiry alone does not reserve the offer.",
       },
     ],
     shipping:
-      "Delivery areas, fees and dispatch times will be confirmed before commercial ordering opens. No delivery promise applies to concept frames.",
+      "Delivery areas, fees and dispatch times will be confirmed before commercial ordering opens. Confirm delivery arrangements with the team before placing an order.",
     returns:
       "The returns process and eligibility will be published before commercial launch. Contact support when configured for any order-specific assistance.",
     privacy:
       "Pre-launch privacy notice: account and enquiry information is used to provide the requested service. Newsletter consent is optional and can be withdrawn from your account. Do not submit sensitive information. The business controller, retention periods, contact channel and applicable operational policy must be approved before commercial launch.",
     terms:
-      "This is a pre-launch development preview. JAEGER is a provisional commercial name pending clearance. Concept frames are not offered for sale. No specification, certification, delivery promise or manufacturing claim is made. Commercial terms require business approval before live ordering.",
+      "This is a pre-launch development preview. JAEGER is a provisional commercial name pending clearance. JAEGER curates frames from the brands shown in the photographs. Exact model details, prices and availability are confirmed per item. No unverified specification, certification or delivery promise is made. Commercial terms require business approval before live ordering.",
   },
 });
+
+// Apply this approved catalogue revision once; preserve accounts, orders and live admin items.
+export function upgradeState(s: State) {
+  if (s.version >= 3) return;
+  const defaults = initialState();
+  const oldConcepts = new Set([
+    "rectangle",
+    "square",
+    "aviator",
+    "cat-eye",
+    "statement",
+  ]);
+  for (const p of s.products)
+    if (oldConcepts.has(p.id) && p.concept) p.archived = true;
+  for (const p of defaults.products)
+    if (!s.products.some((x) => x.id === p.id)) s.products.push(p);
+  s.collections = s.collections.filter((c) => !oldConcepts.has(c.id));
+  for (const c of defaults.collections)
+    if (!s.collections.some((x) => x.id === c.id)) s.collections.push(c);
+  s.settings.heroImage = defaults.settings.heroImage;
+  s.settings.campaignImage = defaults.settings.campaignImage;
+  s.settings.heroCopy = defaults.settings.heroCopy;
+  s.settings.announcement = defaults.settings.announcement;
+  s.settings.faqs = defaults.settings.faqs;
+  s.settings.shipping = defaults.settings.shipping;
+  s.settings.terms = defaults.settings.terms;
+  s.version = 3;
+}

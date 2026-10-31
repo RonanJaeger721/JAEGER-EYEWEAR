@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
 import type { State, Line, Order } from "./types";
+import { introRemaining, quoteLines } from "./pricing";
 export function releaseExpired(s: State, now = Date.now()) {
   for (const order of s.orders)
     if (
@@ -30,6 +31,7 @@ export function createOrder(
     phone: string;
     address: string;
     delivery: string;
+    expectedTotal?: number;
   },
   test = false,
 ): Order {
@@ -57,8 +59,17 @@ export function createOrder(
       throw new Error("Choose between 1 and 10 of each frame.");
     const p = s.products.find((p) => p.id === l.productId && !p.archived);
     const v = p?.variants.find((v) => v.id === l.variantId);
-    if (!p || !v || p.concept || !p.verified || v.price === null)
-      throw new Error("This concept frame is not available to order.");
+    if (
+      !p ||
+      !v ||
+      p.concept ||
+      !p.verified ||
+      p.inventoryConfirmed === false ||
+      v.price === null
+    )
+      throw new Error(
+        "This frame is not available to order until its price, imagery and inventory are confirmed.",
+      );
     if (v.stock < l.quantity)
       throw new Error(`${p.name}: only ${v.stock} available.`);
     return { ...l, name: p.name, color: v.color, price: v.price };
@@ -68,12 +79,23 @@ export function createOrder(
   );
   if (!delivery) throw new Error("Choose an available delivery option.");
   const now = new Date().toISOString();
+  const quote = quoteLines(items, introRemaining(s.orders, test));
+  if (
+    input.expectedTotal !== undefined &&
+    input.expectedTotal !== quote.total + delivery.price
+  )
+    throw new Error(
+      "Offer availability changed. Please reload your bag and review the current total before ordering.",
+    );
   const order: Order = {
     ...input,
     id: randomUUID(),
-    items,
-    total:
-      items.reduce((sum, l) => sum + l.price * l.quantity, 0) + delivery.price,
+    items: items.map((l, i) => ({
+      ...l,
+      discount: quote.items[i].discount,
+      introQuantity: quote.items[i].introQuantity,
+    })),
+    total: quote.total + delivery.price,
     shipping: delivery.price,
     payment: "pending_payment",
     fulfilment: "unfulfilled",
@@ -82,8 +104,7 @@ export function createOrder(
     history: [
       {
         at: now,
-        message:
-          "Order recorded. Payment pending. Inventory reserved for 24 hours.",
+        message: `Order recorded. Payment pending. Inventory reserved for 24 hours.${quote.introQuantity ? ` Launch offer reserved for ${quote.introQuantity} pair(s) at $50 each.` : ""}`,
       },
     ],
     test,

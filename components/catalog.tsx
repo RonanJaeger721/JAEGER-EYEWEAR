@@ -11,6 +11,7 @@ import {
   ZoomIn,
 } from "lucide-react";
 import { useStore, money, Modal } from "./store-provider";
+import { selectionEnquiry } from "@/lib/enquiry";
 import type { Product } from "@/lib/types";
 export function ProductCard({
   product: p,
@@ -27,7 +28,7 @@ export function ProductCard({
     ),
     [quick, setQuick] = useState(false);
   const v = p.variants[color] || p.variants[0];
-  const { add } = useStore();
+  const { add, introRemaining } = useStore();
   return (
     <article className="product-card">
       <div className="product-visual">
@@ -49,11 +50,13 @@ export function ProductCard({
         <span className="product-tag">
           {p.concept
             ? "DESIGN CONCEPT"
-            : p.newArrival
-              ? "NEW ARRIVAL"
-              : v.stock
-                ? "AVAILABLE"
-                : "SOLD OUT"}
+            : p.inventoryConfirmed === false
+              ? "ENQUIRE TO ORDER"
+              : p.newArrival
+                ? "NEW ARRIVAL"
+                : v.stock
+                  ? "AVAILABLE"
+                  : "SOLD OUT"}
         </span>
         <button className="quick-button" onClick={() => setQuick(true)}>
           Quick view <Plus size={15} />
@@ -61,8 +64,11 @@ export function ProductCard({
       </div>
       <div className="product-meta">
         <Link href={`/product/${p.slug}`}>{p.name}</Link>
-        <span>{v.price === null ? "Price TBC" : money(v.price)}</span>
+        <span>{v.price === null ? "Confirm price" : money(v.price)}</span>
       </div>
+      {introRemaining > 0 && v.price !== null && v.price > 5000 && (
+        <p className="product-offer">$50 launch offer · First 3 pairs</p>
+      )}
       <div className="product-bottom">
         <span>{v.color}</span>
         <div className="swatches" aria-label={`${p.name} colours`}>
@@ -79,7 +85,12 @@ export function ProductCard({
         </div>
       </div>
       <button className="card-add" onClick={() => add(p, v.id)}>
-        {p.concept ? "Add concept to bag" : "Add to bag"} <Plus size={14} />
+        {p.concept
+          ? "Add concept to bag"
+          : p.inventoryConfirmed === false
+            ? "Save to bag"
+            : "Add to bag"}{" "}
+        <Plus size={14} />
       </button>
       {quick && (
         <Modal title={p.name.toUpperCase()} onClose={() => setQuick(false)}>
@@ -92,9 +103,11 @@ export function ProductCard({
           <p className="muted">
             {p.concept
               ? "Concept illustration. Not available for purchase."
-              : v.stock
-                ? `${v.stock} available`
-                : "Currently unavailable"}
+              : p.inventoryConfirmed === false
+                ? "Availability confirmed on enquiry"
+                : v.stock
+                  ? `${v.stock} available`
+                  : "Currently unavailable"}
           </p>
           <Link
             className="button full"
@@ -154,10 +167,10 @@ export function CollectionPage({
         .toLowerCase()
         .includes(q),
     );
-  for (const key of ["category", "shape"])
+  for (const key of ["category", "shape", "brand"])
     if (params.get(key))
       results = results.filter(
-        (p) => p[key as "category" | "shape"] === params.get(key),
+        (p) => p[key as "category" | "shape" | "brand"] === params.get(key),
       );
   results = results.filter((p) =>
     p.variants.some(
@@ -168,15 +181,23 @@ export function CollectionPage({
         (!params.get("max") ||
           (v.price !== null && v.price <= Number(params.get("max")) * 100)) &&
         (!params.get("availability") ||
-          (params.get("availability") === "concept"
-            ? p.concept
-            : !p.concept && v.stock > 0)),
+          (params.get("availability") === "enquiry"
+            ? p.inventoryConfirmed === false
+            : !p.concept &&
+              p.verified &&
+              p.inventoryConfirmed !== false &&
+              v.stock > 0)),
     ),
   );
   const sort = params.get("sort") || "featured";
   results.sort((a, b) => {
     const price = (p: Product) =>
       Math.min(...p.variants.map((v) => v.price ?? Number.MAX_SAFE_INTEGER));
+    if (sort === "price-low" || sort === "price-high") {
+      const aUnknown = a.variants.every((v) => v.price === null);
+      const bUnknown = b.variants.every((v) => v.price === null);
+      if (aUnknown !== bUnknown) return Number(aUnknown) - Number(bUnknown);
+    }
     return sort === "name"
       ? a.name.localeCompare(b.name)
       : sort === "price-low"
@@ -197,6 +218,7 @@ export function CollectionPage({
   const shown = results.slice((page - 1) * 8, page * 8);
   const active = [
     "category",
+    "brand",
     "shape",
     "color",
     "lens",
@@ -217,6 +239,11 @@ export function CollectionPage({
       </div>
       {[
         ["category", "Category", ["sunglasses", "optical"]],
+        [
+          "brand",
+          "Brand",
+          [...new Set(products.map((p) => p.brand || "Selected brands"))],
+        ],
         ["shape", "Frame shape", [...new Set(products.map((p) => p.shape))]],
         [
           "color",
@@ -237,7 +264,7 @@ export function CollectionPage({
             ),
           ],
         ],
-        ["availability", "Availability", ["available", "concept"]],
+        ["availability", "Availability", ["available", "enquiry"]],
       ].map(([key, label, options]) => (
         <label className="filter-field" key={String(key)}>
           {label as string}
@@ -265,8 +292,8 @@ export function CollectionPage({
         />
       </label>
       <p className="muted">
-        Concept prices are unconfirmed. A price filter includes only priced
-        products.
+        A price filter includes only frames with a confirmed price. Other
+        selected styles go up to $120; enquire for the exact price.
       </p>
     </>
   );
@@ -370,9 +397,10 @@ export function CollectionPage({
             </nav>
           )}
           <p className="catalog-note">
-            The first collection is taking shape. Illustrations show design
-            concepts; availability, pricing and specifications await
-            verification.
+            Real photographs, original brand identities. Ray-Ban $60. Selected
+            styles up to $120. The first three pairs sold are $50 each, subject
+            to remaining allocation. Confirm exact model details and
+            availability on enquiry.
           </p>
         </div>
       </div>
@@ -391,7 +419,7 @@ export function CollectionPage({
 export function ProductPage({ product: p }: { product: Product }) {
   const params = useSearchParams(),
     router = useRouter();
-  const { add } = useStore();
+  const { add, introRemaining, settings } = useStore();
   const vi = p.variants.findIndex((v) => v.id === params.get("variant"));
   const v = p.variants[Math.max(0, vi)];
   const [image, setImage] = useState(0),
@@ -400,7 +428,9 @@ export function ProductPage({ product: p }: { product: Product }) {
     [start, setStart] = useState<number | null>(null);
   const next = (d: number) =>
     setImage((i) => (i + d + v.images.length) % v.images.length);
-  const available = !p.concept && p.verified && v.price !== null && v.stock > 0;
+  const enquiry = p.inventoryConfirmed === false;
+  const available =
+    !p.concept && p.verified && !enquiry && v.price !== null && v.stock > 0;
   return (
     <>
       <div className="breadcrumbs product-crumb">
@@ -489,6 +519,20 @@ export function ProductPage({ product: p }: { product: Product }) {
             {v.price === null ? "Price to be confirmed" : money(v.price)}
             <small>USD</small>
           </div>
+          {introRemaining > 0 && v.price !== null && v.price > 5000 && (
+            <div className="pdp-offer">
+              <span className="eyebrow">
+                THE FIRST PERSPECTIVE / LAUNCH OFFER
+              </span>
+              <strong>
+                $50 <small>for the first 3 pairs sold</small>
+              </strong>
+              <p>
+                Regular price {money(v.price)}. Offer allocation is confirmed
+                when an eligible order is saved.
+              </p>
+            </div>
+          )}
           <div className="pdp-color">
             <span>
               Frame colour — <strong>{v.color}</strong>
@@ -515,16 +559,18 @@ export function ProductPage({ product: p }: { product: Product }) {
             <span />
             {p.concept
               ? "Concept preview · Not for sale"
-              : available
-                ? `${v.stock} available`
-                : "Currently unavailable"}
+              : enquiry
+                ? "Availability confirmed on enquiry"
+                : available
+                  ? `${v.stock} available`
+                  : "Currently unavailable"}
           </p>
           <label className="qty-label">
             Quantity
             <input
               type="number"
               min="1"
-              max={p.concept ? 10 : Math.min(10, v.stock) || 1}
+              max={p.concept || enquiry ? 10 : Math.min(10, v.stock) || 1}
               value={quantity}
               onChange={(e) =>
                 setQuantity(
@@ -537,15 +583,31 @@ export function ProductPage({ product: p }: { product: Product }) {
             <button
               className="button full"
               onClick={() => add(p, v.id, quantity)}
-              disabled={!p.concept && !available}
+              disabled={!p.concept && !enquiry && !available}
             >
               {p.concept
                 ? "Add concept to bag"
-                : available
-                  ? "Add to bag"
-                  : "Unavailable"}
+                : enquiry
+                  ? "Save to bag"
+                  : available
+                    ? "Add to bag"
+                    : "Unavailable"}
               <Plus size={18} />
             </button>
+            {enquiry && settings.whatsapp && (
+              <a
+                className="button outline full"
+                href={selectionEnquiry(
+                  [p],
+                  [{ productId: p.id, variantId: v.id, quantity }],
+                  settings.whatsapp,
+                )}
+                target="_blank"
+                rel="noreferrer"
+              >
+                Enquire on WhatsApp <ArrowUpRight size={17} />
+              </a>
+            )}
             {available && (
               <Link
                 className="button outline full"
@@ -556,6 +618,12 @@ export function ProductPage({ product: p }: { product: Product }) {
               </Link>
             )}
           </div>
+          {v.price === null && (
+            <p className="muted">
+              Selected styles go up to $120. Ask for the exact price of this
+              frame.
+            </p>
+          )}
           {p.concept && (
             <p className="muted">
               Explore it in your bag. Purchasing opens only after the real

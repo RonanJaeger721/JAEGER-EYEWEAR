@@ -6,14 +6,15 @@ import { useStore } from "./store-provider";
 import { ProductCard } from "./catalog";
 import { Newsletter } from "./shell";
 export function PerspectiveExplorer() {
-  const { products } = useStore();
+  const { products: allProducts } = useStore();
+  const products = allProducts.filter((p) => p.featured).slice(0, 5);
   const [index, setIndex] = useState(0);
   const p = products[index] || products[0];
   if (!p) return null;
   return (
     <section className="perspective" id="perspective">
       <div className="perspective-top">
-        <span className="eyebrow">THE SILHOUETTE STUDY</span>
+        <span className="eyebrow">THE CURATED FRAME EDIT</span>
         <span className="eyebrow">
           00{index + 1} / 00{products.length}
         </span>
@@ -38,7 +39,7 @@ export function PerspectiveExplorer() {
                 onClick={() => setIndex(i)}
               >
                 <span>0{i + 1}</span>
-                {p.shape.replace("-", " ")}
+                {p.brand || p.shape.replace("-", " ")}
                 <ArrowUpRight size={16} />
               </button>
             ))}
@@ -51,11 +52,11 @@ export function PerspectiveExplorer() {
           <img
             key={p.id}
             src={p.variants[0].images[0]}
-            alt={`${p.name} original concept illustration`}
+            alt={`${p.name} original brand photograph`}
           />
           <div className="stage-caption">
             <div>
-              <span className="eyebrow">DESIGN CONCEPT</span>
+              <span className="eyebrow">THE CURATED SELECTION</span>
               <h3>{p.name}</h3>
             </div>
             <Link
@@ -90,15 +91,67 @@ export function PerspectiveExplorer() {
     </section>
   );
 }
+export function LaunchOffer() {
+  const { introRemaining } = useStore();
+  return (
+    <section
+      className="launch-offer"
+      aria-label="Collection pricing and launch offer"
+    >
+      <div>
+        <span className="eyebrow">THE COLLECTION</span>
+        <strong>$60–$120</strong>
+        <span>Ray-Ban $60. Selected styles up to $120.</span>
+      </div>
+      <span className="launch-divider" aria-hidden="true" />
+      <div>
+        <span className="eyebrow">
+          {introRemaining > 0
+            ? "THE FIRST PERSPECTIVE / LAUNCH OFFER"
+            : "THE FIRST PERSPECTIVE"}
+        </span>
+        <strong>
+          {introRemaining > 0 ? "$50" : "A different point of view."}
+        </strong>
+        <span>
+          {introRemaining > 0
+            ? "First 3 pairs sold. $50 each."
+            : "The introductory allocation is fully reserved."}
+        </span>
+      </div>
+      <Link className="underlink" href="/shop">
+        Find your frame <ArrowUpRight size={18} />
+      </Link>
+    </section>
+  );
+}
 export function Home() {
   const { products, settings } = useStore();
+  const [heroIndex, setHeroIndex] = useState(0);
+  const heroPhotos = [
+    { src: settings.heroImage, caption: "THE AS-WORN EDIT / RAY-BAN" },
+    {
+      src: "/media/ronan-boutique.webp",
+      caption: "RONAN JAEGER / A PERSONAL PERSPECTIVE",
+    },
+    { src: "/media/street-miumiu.webp", caption: "THE AS-WORN EDIT / MIU MIU" },
+    { src: "/media/street-dior.webp", caption: "THE AS-WORN EDIT / DIOR" },
+  ];
+  const hero = heroPhotos[heroIndex];
   return (
     <>
-      <section className="hero">
+      <section className="hero hero-portrait">
         <img
           className="hero-image"
-          src={settings.heroImage}
-          alt="Original JAEGER campaign concept based on founder Ronan's portrait"
+          key={hero.src}
+          src={hero.src}
+          srcSet={
+            hero.src === "/media/ronan-boutique.webp"
+              ? "/media/ronan-boutique-mobile.webp 700w, /media/ronan-boutique.webp 1122w"
+              : undefined
+          }
+          sizes="(max-width: 800px) 100vw, 54vw"
+          alt={hero.caption}
           fetchPriority="high"
         />
         <div className="hero-shade" />
@@ -125,24 +178,33 @@ export function Home() {
           <a href="#perspective">
             SCROLL TO DISCOVER <ArrowDown size={14} />
           </a>
-          <span>CAMPAIGN CONCEPT · PRE-LAUNCH</span>
+          <span>{hero.caption}</span>
+        </div>
+        <div
+          className="hero-photo-nav"
+          aria-label="Choose a campaign photograph"
+        >
+          {heroPhotos.map((photo, i) => (
+            <button
+              key={photo.src}
+              aria-pressed={heroIndex === i}
+              aria-label={`Campaign photograph ${i + 1}: ${photo.caption}`}
+              onClick={() => setHeroIndex(i)}
+            >
+              0{i + 1}
+            </button>
+          ))}
         </div>
       </section>
-      <div className="manifesto-strip">
-        <span>A DIFFERENT PERSPECTIVE.</span>
-        <p>
-          Considered silhouettes.
-          <br />
-          Uncompromising individuality.
-        </p>
-        <span className="strip-index">J / 001</span>
-      </div>
+      <LaunchOffer />
       <PerspectiveExplorer />
       <section className="section first-look">
         <div className="section-heading">
           <div>
-            <span className="eyebrow">THE COLLECTION TAKES SHAPE</span>
-            <h2>The first perspective.</h2>
+            <span className="eyebrow">
+              ORIGINAL EYEWEAR / MULTIPLE ORIGINAL BRANDS
+            </span>
+            <h2>The as-worn selection.</h2>
           </div>
           <Link className="underlink" href="/new-arrivals">
             Explore new arrivals <ArrowUpRight size={17} />
@@ -157,16 +219,16 @@ export function Home() {
             ))}
         </div>
         <p className="catalog-note">
-          A first look at proposed silhouettes. Concept illustrations, with
-          pricing and availability to be confirmed.
+          Original brands. Individual perspectives. Ray-Ban $60. Selected styles
+          up to $120; exact price and availability confirmed on enquiry.
         </p>
       </section>
       <section className="edits">
         <Link href="/sunglasses" className="edit-tile edit-sun">
           <div className="edit-image">
             <img
-              src="/media/rectangle-0.svg"
-              alt="Original rectangular sunglasses concept"
+              src="/media/street-rayban-front.webp"
+              alt="Ray-Ban sunglasses worn in the supplied street portrait"
               loading="lazy"
             />
           </div>
@@ -182,8 +244,8 @@ export function Home() {
         <Link href="/optical" className="edit-tile edit-optical">
           <div className="edit-image">
             <img
-              src="/media/cat-eye-0.svg"
-              alt="Original optical frame concept"
+              src="/media/versace-optical-black.webp"
+              alt="Versace optical frames in the supplied shelf photograph"
               loading="lazy"
             />
           </div>
@@ -196,11 +258,14 @@ export function Home() {
             <ArrowUpRight size={28} />
           </div>
         </Link>
-        <Link href="/shop?shape=statement" className="edit-tile edit-statement">
+        <Link
+          href="/collections/statement"
+          className="edit-tile edit-statement"
+        >
           <div className="edit-image">
             <img
-              src="/media/statement-1.svg"
-              alt="Original sculptural statement frame concept"
+              src="/media/prada-blue-shield.webp"
+              alt="Prada blue shield photographed on the showroom shelf"
               loading="lazy"
             />
           </div>
@@ -216,8 +281,8 @@ export function Home() {
       </section>
       <section className="campaign">
         <img
-          src={settings.heroImage}
-          alt="JAEGER campaign concept portrait"
+          src="/media/friends-edit.webp"
+          alt="Four friends wearing their selected original-brand eyewear"
           loading="lazy"
         />
         <div>
@@ -232,16 +297,18 @@ export function Home() {
             Discover collection 001 <ArrowUpRight size={18} />
           </Link>
         </div>
-        <span className="campaign-credit">ORIGINAL CAMPAIGN CONCEPT</span>
+        <span className="campaign-credit">
+          ORIGINAL BRANDS / INDIVIDUAL PERSPECTIVES
+        </span>
       </section>
       <section className="story-preview section">
         <div className="story-image">
           <img
             src={settings.campaignImage}
-            alt="Ronan, JAEGER founder, exploring eyewear in a showroom"
+            alt="Two friends wearing their selected frames in a supplied street photograph"
             loading="lazy"
           />
-          <span>RONAN / THE FOUNDER’S PERSPECTIVE</span>
+          <span>STYLE IS PERSONAL / THE JAEGER PERSPECTIVE</span>
         </div>
         <div>
           <span className="eyebrow">THE JAEGER PERSPECTIVE</span>
@@ -251,9 +318,16 @@ export function Home() {
             INDIVIDUALITY.
           </h2>
           <p>
-            JAEGER explores the intersection of modern design, personal
-            expression and everyday style. Our vision is to create eyewear that
-            feels considered, distinctive and effortlessly wearable.
+            “Instead of constantly searching for my style, why not create a
+            place that reflects it?”
+          </p>
+          <p>
+            Founded by brothers Ronan and Michael Jaeger, JAEGER EYEWEAR brings
+            our passion for style, creativity and individuality into something
+            more personal.
+          </p>
+          <p className="founder-signature">
+            Ronan &amp; Michael Jaeger — Co-founders
           </p>
           <Link className="underlink" href="/our-story">
             A closer look at JAEGER <ArrowUpRight size={18} />

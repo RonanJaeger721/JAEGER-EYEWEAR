@@ -2,6 +2,7 @@
 import Link from "next/link";
 import { ArrowUpRight, Plus } from "lucide-react";
 import { useStore, BagContents } from "./store-provider";
+import { founderStory } from "@/lib/story";
 import { PerspectiveExplorer } from "./home";
 export function InformationPage({ page }: { page: string }) {
   const { settings, collections } = useStore();
@@ -20,16 +21,19 @@ export function InformationPage({ page }: { page: string }) {
           <span className="eyebrow">THE FIRST EDITION</span>
           <h1>COLLECTION 001.</h1>
           <p>
-            Five studies in form. One individual point of view.
+            Multiple original brands. One individual point of view.
             <br />
-            Explore the proposed silhouettes of JAEGER EYEWEAR.
+            Explore the real frames curated by JAEGER EYEWEAR.
           </p>
         </section>
         <div className="collection-list">
           {collections.map((c) => (
             <Link href={`/collections/${c.id}`} key={c.id}>
               <span>{c.name}</span>
-              <img src={c.image} alt={`${c.name} concept illustration`} />
+              <img
+                src={c.image}
+                alt={`${c.name} supplied product photograph`}
+              />
               <p>{c.description}</p>
               <ArrowUpRight size={24} />
             </Link>
@@ -40,46 +44,37 @@ export function InformationPage({ page }: { page: string }) {
   if (page === "our-story")
     return (
       <>
-        <section className="story-page section">
+        <section className="story-page section founder-story-page">
           <div>
-            <span className="eyebrow">THE JAEGER PERSPECTIVE</span>
+            <span className="eyebrow">OUR STORY / RONAN’S PERSPECTIVE</span>
             <h1>
-              DESIGNED FOR
+              JAEGER
               <br />
-              INDIVIDUALITY.
+              EYEWEAR.
             </h1>
-            <p className="large-copy">
-              A frame is a small thing.
-              <br />A point of view is everything.
-            </p>
-            <p>
-              JAEGER explores the intersection of modern design, personal
-              expression and everyday style. Our vision is to create eyewear
-              that feels considered, distinctive and effortlessly wearable.
-            </p>
-            <p>
-              Founded by Ronan, this proposed eyewear division brings a personal
-              perspective to the JAEGER fashion world. Collection 001 begins
-              with an exploration of silhouette: the rectangle, the square, the
-              aviator, the cat eye and the statement.
-            </p>
-            <p className="muted">
-              JAEGER remains a provisional commercial name pending trademark
-              clearance. The first collection is in development.
-            </p>
+            <p className="large-copy">A Different Perspective.</p>
+            {founderStory.map((paragraph, i) => (
+              <p key={i} className={i === 4 ? "story-pullquote" : undefined}>
+                {i === 4 || i === 10 ? <strong>{paragraph}</strong> : paragraph}
+              </p>
+            ))}
+            <div className="story-signoff">
+              <strong>JAEGER EYEWEAR</strong>
+              <em>A Different Perspective.</em>
+              <span>Founded by Ronan &amp; Michael Jaeger.</span>
+            </div>
             <Link className="underlink" href="/collections">
-              Explore the first collection <ArrowUpRight size={17} />
+              Explore the collection <ArrowUpRight size={17} />
             </Link>
           </div>
           <figure>
             <img
               src={settings.campaignImage}
-              alt="Founder Ronan exploring eyewear in a showroom"
+              alt="The JAEGER perspective: real frames worn in the supplied street photograph"
             />
             <figcaption>
-              RONAN / A PERSONAL PERSPECTIVE
-              <br />
-              Showroom visit; frames pictured are third-party design references.
+              A PERSONAL PERSPECTIVE / JAEGER EYEWEAR
+              <br />A personal perspective on style and individuality.
             </figcaption>
           </figure>
         </section>
@@ -122,13 +117,13 @@ export function InformationPage({ page }: { page: string }) {
         </h1>
         <img
           className="size-frame"
-          src="/media/rectangle-0.svg"
-          alt="Concept rectangle frame illustration"
+          src="/media/rb-angular-black.webp"
+          alt="Ray-Ban angular frame from the supplied product photograph"
         />
         <p>
           Three measurements commonly describe a frame. Compare verified
-          dimensions with a pair you already find comfortable. No dimensions are
-          claimed for our concept silhouettes.
+          dimensions with a pair you already find comfortable. Measurements are
+          confirmed individually for the exact model.
         </p>
         <div className="measurement-list">
           <div>
@@ -181,9 +176,9 @@ export function InformationPage({ page }: { page: string }) {
       )}
       <div className="notice">
         <p>
-          Current status: pre-launch. The catalogue contains clearly labelled
-          concept silhouettes. Commercial launch remains subject to brand and
-          operational approval.
+          Current status: pre-launch. The catalogue contains clearly labelled a
+          curated multi-brand selection. Commercial launch remains subject to
+          brand and operational approval.
         </p>
       </div>
       <Link href="/contact" className="underlink">

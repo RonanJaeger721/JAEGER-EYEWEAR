@@ -9,6 +9,8 @@ import {
 } from "react";
 import { X, Minus, Plus, ArrowUpRight } from "lucide-react";
 import Link from "next/link";
+import { selectionEnquiry } from "@/lib/enquiry";
+import { quoteLines } from "@/lib/pricing";
 import type { Product, Collection, Settings, Line } from "@/lib/types";
 export type Catalog = {
   products: Product[];
@@ -16,6 +18,7 @@ export type Catalog = {
   settings: Settings;
   storageReady: boolean;
   orderingOpen: boolean;
+  introRemaining: number;
 };
 type Context = Catalog & {
   cart: Line[];
@@ -140,7 +143,12 @@ export function StoreProvider({
               typeof l.variantId === "string" &&
               Number.isInteger(l.quantity) &&
               l.quantity > 0 &&
-              l.quantity <= 10,
+              l.quantity <= 10 &&
+              catalog.products.some(
+                (p) =>
+                  p.id === l.productId &&
+                  p.variants.some((v) => v.id === l.variantId),
+              ),
           ),
         );
     } catch {}
@@ -160,15 +168,26 @@ export function StoreProvider({
         if (l.productId !== p || l.variantId !== v) return [l];
         const product = catalog.products.find((x) => x.id === p);
         const variant = product?.variants.find((x) => x.id === v);
-        const max = product?.concept ? 10 : Math.min(10, variant?.stock || 0);
+        const max =
+          product?.concept || product?.inventoryConfirmed === false
+            ? 10
+            : Math.min(10, variant?.stock || 0);
         return q > 0 && max > 0 ? [{ ...l, quantity: Math.min(max, q) }] : [];
       }),
     );
   const add = (p: Product, v: string, q = 1) => {
     const variant = p.variants.find((x) => x.id === v);
     if (!variant) return;
-    const max = p.concept ? 10 : Math.min(10, variant.stock);
-    if (max === 0 || (!p.concept && (!p.verified || variant.price === null))) {
+    const max =
+      p.concept || p.inventoryConfirmed === false
+        ? 10
+        : Math.min(10, variant.stock);
+    if (
+      max === 0 ||
+      (!p.concept &&
+        p.inventoryConfirmed !== false &&
+        (!p.verified || variant.price === null))
+    ) {
       setToast("This frame is currently unavailable.");
       return;
     }
@@ -215,7 +234,7 @@ export function StoreProvider({
   );
 }
 export function BagContents({ close }: { close?: () => void }) {
-  const { cart, products, setQuantity } = useStore();
+  const { cart, products, setQuantity, introRemaining, settings } = useStore();
   const lines = cart.map((l) => ({
     l,
     p: products.find((p) => p.id === l.productId),
@@ -224,14 +243,18 @@ export function BagContents({ close }: { close?: () => void }) {
     ({ l, p }) =>
       !p ||
       p.concept ||
+      p.inventoryConfirmed === false ||
+      !p.verified ||
       p.variants.find((v) => v.id === l.variantId)?.price == null,
   );
-  const total = lines.reduce(
-    (n, { l, p }) =>
-      n +
-      (p?.variants.find((v) => v.id === l.variantId)?.price || 0) * l.quantity,
-    0,
+  const quote = quoteLines(
+    lines.map(({ l, p }) => ({
+      price: p?.variants.find((v) => v.id === l.variantId)?.price || 0,
+      quantity: l.quantity,
+    })),
+    introRemaining,
   );
+  const total = quote.total;
   return (
     <div className="bag-content">
       {cart.length === 0 ? (
@@ -291,15 +314,34 @@ export function BagContents({ close }: { close?: () => void }) {
               </div>
             );
           })}
+          {quote.discount > 0 && (
+            <div className="bag-offer">
+              <span>
+                Launch offer · {quote.introQuantity}{" "}
+                {quote.introQuantity === 1 ? "pair" : "pairs"} at $50 each
+              </span>
+              <strong>−{money(quote.discount)}</strong>
+            </div>
+          )}
           <div className="bag-total">
-            <span>{concepts ? "Priced items subtotal" : "Subtotal"}</span>
+            <span>{concepts ? "Priced selection estimate" : "Subtotal"}</span>
             <strong>{money(total)}</strong>
           </div>
           <p className="muted">
             {concepts
-              ? "Your bag contains concept frames. These can be explored, but cannot be purchased."
-              : "Delivery calculated at the next step. All amounts in USD."}
+              ? "Exact prices and availability are confirmed on enquiry. The estimate includes only priced frames and any launch offer estimate. An enquiry does not reserve stock or the offer."
+              : "Delivery calculated at the next step. Offer allocation is confirmed when your order is saved. All amounts in USD."}
           </p>
+          {settings.whatsapp && concepts && (
+            <a
+              className="button full"
+              href={selectionEnquiry(products, cart, settings.whatsapp)}
+              target="_blank"
+              rel="noreferrer"
+            >
+              Enquire on WhatsApp <ArrowUpRight size={17} />
+            </a>
+          )}
           <Link className="button full" href="/checkout" onClick={close}>
             Review bag & continue <ArrowUpRight size={17} />
           </Link>

@@ -53,6 +53,7 @@ export default async function Page({ params }: Props) {
       <>
         <ProductPage product={p} />
         {p.verified &&
+          p.inventoryConfirmed !== false &&
           !p.concept &&
           p.variants.every((v) => v.price !== null) && (
             <script
@@ -63,7 +64,10 @@ export default async function Page({ params }: Props) {
                   "@type": "Product",
                   name: p.name,
                   description: p.description,
-                  brand: { "@type": "Brand", name: "JAEGER EYEWEAR" },
+                  brand: {
+                    "@type": "Brand",
+                    name: p.brand || "JAEGER EYEWEAR",
+                  },
                   offers: p.variants.map((v) => ({
                     "@type": "Offer",
                     priceCurrency: "USD",

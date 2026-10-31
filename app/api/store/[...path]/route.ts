@@ -14,6 +14,7 @@ import {
   settingsSchema,
   orderSchema,
 } from "@/lib/validation";
+import { introRemaining } from "@/lib/pricing";
 import { randomUUID } from "node:crypto";
 import type { State } from "@/lib/types";
 export const runtime = "nodejs";
@@ -35,6 +36,7 @@ export async function GET(
         products: state.products.filter((p) => !p.archived),
         collections: state.collections.sort((a, b) => a.order - b.order),
         settings: state.settings,
+        introRemaining: introRemaining(state.orders),
         storageReady: storageReady(),
         orderingOpen:
           storageReady() &&

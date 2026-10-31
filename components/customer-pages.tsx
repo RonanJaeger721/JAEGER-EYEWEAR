@@ -5,6 +5,8 @@ import { useSearchParams } from "next/navigation";
 import { signIn, signOut } from "next-auth/react";
 import { ArrowUpRight, Check, ShieldCheck } from "lucide-react";
 import { useStore, api, money, BagContents } from "./store-provider";
+import { selectionEnquiry } from "@/lib/enquiry";
+import { quoteLines } from "@/lib/pricing";
 import type { Order } from "@/lib/types";
 type Me = {
   user: { id: string; name: string; email: string; role: string };
@@ -215,7 +217,10 @@ export function OrderList({ orders }: { orders: Order[] }) {
             {o.items.map((l) => (
               <p key={l.variantId}>
                 {l.name} · {l.color} × {l.quantity}
-                <span>{money(l.price * l.quantity)}</span>
+                {!!l.introQuantity && (
+                  <small>Launch offer: {l.introQuantity} at $50 each</small>
+                )}
+                <span>{money(l.price * l.quantity - (l.discount || 0))}</span>
               </p>
             ))}
             <p>
@@ -250,7 +255,8 @@ export function OrderList({ orders }: { orders: Order[] }) {
   );
 }
 export function CheckoutPage() {
-  const { cart, products, settings, orderingOpen, clear } = useStore();
+  const { cart, products, settings, orderingOpen, clear, introRemaining } =
+    useStore();
   const [me, setMe] = useState<Me | null>(null),
     [error, setError] = useState(""),
     [busy, setBusy] = useState(false),
@@ -268,19 +274,22 @@ export function CheckoutPage() {
       !p ||
       p.concept ||
       !p.verified ||
+      p.inventoryConfirmed === false ||
       p.variants.find((v) => v.id === l.variantId)?.price === null
     );
   });
   const selected = settings.delivery.find((d) => d.id === delivery);
-  const subtotal = cart.reduce(
-    (n, l) =>
-      n +
-      (products
-        .find((p) => p.id === l.productId)
-        ?.variants.find((v) => v.id === l.variantId)?.price || 0) *
-        l.quantity,
-    0,
+  const quote = quoteLines(
+    cart.map((l) => ({
+      price:
+        products
+          .find((p) => p.id === l.productId)
+          ?.variants.find((v) => v.id === l.variantId)?.price || 0,
+      quantity: l.quantity,
+    })),
+    introRemaining,
   );
+  const subtotal = quote.total;
   if (order)
     return (
       <section className="confirmation section">
@@ -319,23 +328,33 @@ export function CheckoutPage() {
       <div>
         <span className="eyebrow">YOUR NEXT PERSPECTIVE</span>
         <h1>Review your bag.</h1>
-        <p className="muted">USD · Zimbabwe · Manual order</p>
+        <p className="muted">USD · Zimbabwe · Personal assistance</p>
         {!cart.length ? (
           <Link href="/shop" className="button">
             Explore eyewear
           </Link>
         ) : concepts || !orderingOpen ? (
           <div className="notice">
-            <h2>
-              {concepts
-                ? "A first look. Not yet for sale."
-                : "Ordering opens soon."}
-            </h2>
+            <h2>Make it your perspective.</h2>
             <p>
-              {concepts
-                ? "Your bag includes concept frames. Prices, stock and product information need verification before these frames can be ordered."
-                : "This is a pre-launch preview. Commercial orders are currently closed."}
+              Send your selection to the team to confirm availability, the exact
+              price of each frame and delivery. Ray-Ban pairs are $60; selected
+              styles go up to $120. Ask about the first three pairs at $50 each.
             </p>
+            <p>
+              An enquiry is not a paid order or stock reservation. The team will
+              confirm all details before payment.
+            </p>
+            {settings.whatsapp && (
+              <a
+                className="button full"
+                href={selectionEnquiry(products, cart, settings.whatsapp)}
+                target="_blank"
+                rel="noreferrer"
+              >
+                Enquire about my selection <ArrowUpRight size={17} />
+              </a>
+            )}
             <Link className="underlink" href="/#newsletter">
               Get collection announcements <ArrowUpRight size={16} />
             </Link>
@@ -363,6 +382,7 @@ export function CheckoutPage() {
                   ...fields,
                   email: me.user.email,
                   lines: cart,
+                  expectedTotal: subtotal + (selected?.price || 0),
                   key,
                 });
                 setOrder(result.order);
@@ -434,6 +454,12 @@ export function CheckoutPage() {
                 payment until the team verifies payment.
               </p>
             </div>
+            {quote.discount > 0 && (
+              <p className="muted">
+                Launch offer estimate: {quote.introQuantity} at $50 each. Final
+                allocation is checked when the order is saved.
+              </p>
+            )}
             <p>
               Total including selected delivery:{" "}
               <strong>{money(subtotal + (selected?.price || 0))}</strong>

@@ -18,6 +18,7 @@ function fixture() {
   const p = s.products[0];
   p.concept = false;
   p.verified = true;
+  p.inventoryConfirmed = true;
   p.variants[0].price = 4500;
   p.variants[0].stock = 3;
   return s;
@@ -30,7 +31,13 @@ const input = () => ({
   phone: "000000000",
   address: "Local test address",
   delivery: "local",
-  lines: [{ productId: "rectangle", variantId: "rectangle-0", quantity: 2 }],
+  lines: [
+    {
+      productId: "ray-ban-angular-black",
+      variantId: "ray-ban-angular-black-0",
+      quantity: 2,
+    },
+  ],
 });
 test("server computes totals, reserves exact variant and leaves payment pending", () => {
   const s = fixture(),
@@ -38,7 +45,7 @@ test("server computes totals, reserves exact variant and leaves payment pending"
   assert.equal(o.total, 9500);
   assert.equal(o.payment, "pending_payment");
   assert.equal(s.products[0].variants[0].stock, 1);
-  assert.equal(s.products[0].variants[1].stock, 0);
+  assert.equal(s.products[1].variants[0].stock, 0);
 });
 test("idempotent retry records only one order and one stock deduction", () => {
   const s = fixture(),

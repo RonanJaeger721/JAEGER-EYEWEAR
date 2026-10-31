@@ -38,6 +38,8 @@ export const productSchema = z.object({
     .regex(/^[a-z0-9-]+$/)
     .max(80),
   name: text.min(1),
+  brand: text.optional(),
+  inventoryConfirmed: z.boolean().optional(),
   category: z.enum(["sunglasses", "optical"]),
   shape: z.string().min(1).max(60),
   description: text,
@@ -95,6 +97,7 @@ export const settingsSchema = z.object({
 });
 export const orderSchema = z.object({
   key: z.uuid(),
+  expectedTotal: z.number().int().min(0).max(1000000000).optional(),
   lines: z
     .array(
       z.object({

@@ -24,9 +24,11 @@ Create the first admin with `ADMIN_EMAIL`, `ADMIN_NAME`, and a strong `ADMIN_PAS
 
 Home, all eyewear, sunglasses, optical, new arrivals, collections, individual collections, product detail, search, bag, manual checkout, account, orders, story, contact, FAQ, sizing, shipping/returns, privacy and terms are implemented. Unknown routes return 404.
 
-Filters for category, shape, colour, lens, material, maximum USD price and availability update real catalogue results and URL parameters. Sorting and pagination are supported. Product galleries support thumbnails, enlargement and touch swipes when photographs are available. The sample frames each have one illustration: no true 360-degree claim is made.
+Filters for brand, category, shape, colour, lens, material, maximum USD price and availability update real catalogue results and URL parameters. Sorting and pagination are supported. Product galleries support thumbnails, enlargement and touch swipes when photographs are available. The catalogue contains sixteen photographed styles from the supplied table, shelf and lifestyle images. No true 360-degree claim is made.
 
-The bag preserves variant IDs and quantities in local storage. Real stock restrictions apply in the UI and are independently enforced on the server. Prices are integer USD cents. Null is an unconfirmed price, never a zero-dollar product.
+The supplied founding story identifies Ronan and Michael Jaeger as co-founders and is reproduced on Our Story, with an excerpt on the homepage.
+
+The bag preserves variant IDs and quantities in local storage. Frames with unknown inventory can be saved to a selection, then sent to the published WhatsApp number in an editable enquiry. An enquiry is not a saved order, stock reservation or payment. Estimates include only priced items; null-price items explicitly require confirmation. Real stock restrictions apply in the UI and are independently enforced on the server. Prices are integer USD cents. Null is an unconfirmed price, never a zero-dollar product.
 
 ## Management
 
@@ -35,13 +37,13 @@ The bag preserves variant IDs and quantities in local storage. Real stock restri
 - Admin: overview, verified revenue, low stock, product/variant/pricing/stock/gallery management, collections, orders, payment evidence, fulfilment, customer order records, consent records, enquiries, policies, contacts, delivery and launch settings.
 - Editor: catalogue, collections and editorial content. Cannot access customers/orders or change commercial settings.
 - Products can be archived. Content/collection ordering and assignments are persisted.
-- Image uploads validate MIME, size and decoded image content, strip metadata by re-encoding to WebP, and enforce role access. Local images save to `public/uploads`; hosted uploads require `BLOB_READ_WRITE_TOKEN`.
+- Image uploads validate MIME, size and decoded image content, strip metadata by re-encoding to WebP, and enforce role access. Local images save to `.data/uploads` and are served through a validated image route; hosted uploads require `BLOB_READ_WRITE_TOKEN`.
 
 ## PostgreSQL and Vercel
 
 The Vercel project is `jaeger-eyewear`, linked to `RonanJaeger721/JAEGER-EYEWEAR`.
 
-The PostgreSQL adapter uses parameterized queries and a transactional `SELECT ... FOR UPDATE` on one versioned store document. Stock reservation, order creation, idempotency and payment reference checks are serialized. This is intentionally a compact initial architecture; split into normalized tables and background reservation processing when volume warrants it. Migration: `migrations/001_store.sql`. Empty databases initialize with the concept catalogue once; later admin edits persist.
+The PostgreSQL adapter uses parameterized queries and a transactional `SELECT ... FOR UPDATE` on one versioned store document. Stock reservation, order creation, idempotency and payment reference checks are serialized. This is intentionally a compact initial architecture; split into normalized tables and background reservation processing when volume warrants it. Migration: `migrations/001_store.sql`. Empty databases initialize with the real-photo catalogue once; later admin edits persist.
 
 Required hosted setup:
 
@@ -49,7 +51,7 @@ Required hosted setup:
 2. Set a fresh `AUTH_SECRET` and `AUTH_TRUST_HOST=true` in Vercel. Set `NEXT_PUBLIC_SITE_URL` to the final canonical origin.
 3. Connect Vercel Blob for image uploads using `BLOB_READ_WRITE_TOKEN`.
 4. Bootstrap the owner against the intended PostgreSQL database from a trusted local operator environment. Never expose a public bootstrap endpoint.
-5. Replace concept drawings with approved exact-variant photographs, verified prices and stock. Only mark supplier data verified when supported. Product JSON-LD is emitted only for verified, priced, non-concept products.
+5. Confirm exact models, sourcing, prices and actual stock quantities for the photographed catalogue. Only mark supplier data verified when supported. Product JSON-LD is emitted only for verified, priced, non-concept products with confirmed inventory, using the original product brand.
 6. Approve brand clearance, policies, delivery and payment operations before enabling launch approval and manual ordering.
 
 Vercel project protection remains intact. A successful deployment is a pre-launch review build, not commercial approval. Robots disallow indexing and pre-launch sitemap is empty. Review SEO indexing deliberately before commercial release.
@@ -67,10 +69,13 @@ Before enabling a gateway, implement signature validation on the raw webhook bod
 ## Assets and content provenance
 
 - Original supplied `crown logo.png` is copied byte-for-byte. CSS changes display polarity on light surfaces; its deliberately incomplete geometry is preserved. It is used with plain text JAEGER EYEWEAR as explicitly instructed by Ronan.
-- Original founder showroom photograph is used editorially. The eyewear in that photograph is a third-party reference, not JAEGER inventory.
-- Hero/campaign portrait is an AI-generated original campaign **concept**, based on Ronan's supplied portrait. It is not an approved product photograph. Labels remain visible.
-- All 20 supplied showroom photographs were inspected, including duplicate images. Both videos were sampled. Third-party marks were not erased or repurposed as JAEGER merchandise. Those showroom assets are not included as sellable product imagery.
-- Fifteen original SVG silhouette studies cover five proposed shapes and three colour directions each. All are labelled concepts, with no fabricated stock, price, dimensions, UV protection, certification or manufacturing claims.
+- On 1 November 2026 Ronan requested a multi-brand retail selection, including the eyewear worn in the supplied portraits and crops of frames on the shelves. Original brand identities are retained; nothing is presented as JAEGER-manufactured eyewear.
+- Sixteen real-photo catalogue entries include Ray-Ban, Miu Miu, Dior, Porsche Design, Prada, Versace, Gucci and Fendi, plus one metal rectangle whose brand is left unconfirmed. Names describe visible silhouettes and are not asserted to be official model names. No exact model codes, UV claims or certifications are invented.
+- Ray-Ban is $60 per Ronan's confirmation. Other selected styles go up to $120; their individual exact prices remain null until confirmed. Stock quantities were not supplied, so `inventoryConfirmed: false` gives an enquiry flow rather than a false sold-out or in-stock assertion.
+- Authenticity wording is supplied by the seller. Photographs and visible trademarks are not an independent authentication or an authorized-dealer claim. Verify sourcing before enabling commercial orders.
+- Hero offers the supplied street Ray-Ban portrait, exact boutique portrait, Miu Miu portrait and Dior portrait. `Luxury Boutique Mirror Selfie.png` remains preserved byte-for-byte at `public/media/ronan-boutique-original.png`, with responsive WebP derivatives. No generated campaign is displayed.
+- All supplied showroom photographs and new lifestyle/table images were inspected. Direct crops retain the original pixels and brand marks. `public/media/photo-provenance.json` records the source and crop for each derivative. Shelf crops remain visibly photographic; no synthetic product isolation or invented angles are used.
+- Earlier SVG concept studies remain archived assets and are not displayed as the current product catalogue. Version three archives the previous concept entries and adds the approved real-photo catalogue once, preserving accounts, orders, edited real products and operational gates.
 - Packaging is a CSS design study, subject to approval and costing.
 - User-confirmed contacts: `+263780774428`, `ronanjaeger721@gmail.com`. Instagram and TikTok are omitted until real account URLs are supplied.
 - Reference principles were studied from https://www.hillseyewear.com/ and https://lindberg.com/en. No code or imagery was copied.
@@ -88,3 +93,9 @@ npm audit --omit=dev
 `scripts/qa-local.ts` exercises the running local API: registration/session, unauthorized access, role boundaries, validation, inventory, idempotency, totals, payment status, admin verification, fulfilment, newsletter consent, contact persistence, media upload and origin checks. Run with `npx tsx scripts/qa-local.ts` (default `http://localhost:3002`; override `QA_URL`). It refuses Vercel/remote databases and removes its temporary fixtures in a finally block.
 
 Customer-support messages are saved for the team; no outgoing email service or automatic transactional emails are claimed. Account recovery currently uses the published support email; automated password recovery and email verification must be configured before commercial launch. Public production traffic also needs infrastructure-level abuse controls, monitoring, backup/restore tests and operational review.
+
+## Launch offer
+
+The first three pairs sold are $50 each. Ray-Ban is $60; selected styles from other brands go up to $120, with exact per-item prices confirmed on enquiry. The offer applies to three units globally, including across multi-item orders; it is not three unlimited-quantity baskets. An active pending order holds an offer slot for its 24-hour inventory reservation. Expired or cancelled unpaid orders return the slot; verified paid pairs consume it. Test transactions have a separate allocation and cannot consume the live offer. Pricing is calculated server-side under the same database row lock as stock, snapshotted in the order, and protected against duplicate retries. The bag and checkout show estimates, and checkout rejects changed offer totals before saving rather than silently charging a higher amount. Launch approval and verified product/stock requirements remain enforced.
+
+WhatsApp sales must be recorded by the operator in the connected store before the global introductory allocation can reflect them. Until hosted PostgreSQL and operational approval are complete, the site offers enquiries and does not claim to reserve the launch offer online.
