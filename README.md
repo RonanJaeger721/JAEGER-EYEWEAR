@@ -22,6 +22,8 @@ Create the first admin with `ADMIN_EMAIL`, `ADMIN_NAME`, and a strong `ADMIN_PAS
 
 ## Storefront
 
+The current campaign uses a brighter photographic composition, manual photo crossfades, a pausable brand ribbon, and four collection switches. The shop-the-photograph section maps four accessible hotspots to the actual frames in the group portrait; selecting a frame updates its image, product link and bag action. Archived frames are omitted. Scroll reveals respect reduced-motion preferences, and essential content remains visible without JavaScript. Mobile keeps product callouts below the campaign photograph so faces stay unobscured. Search includes direct collection shortcuts.
+
 Home, all eyewear, sunglasses, optical, new arrivals, collections, individual collections, product detail, search, bag, manual checkout, account, orders, story, contact, FAQ, sizing, shipping/returns, privacy and terms are implemented. Unknown routes return 404.
 
 Filters for brand, category, shape, colour, lens, material, maximum USD price and availability update real catalogue results and URL parameters. Sorting and pagination are supported. Product galleries support thumbnails, enlargement and touch swipes when photographs are available. The catalogue contains sixteen photographed styles from the supplied table, shelf and lifestyle images. No true 360-degree claim is made.

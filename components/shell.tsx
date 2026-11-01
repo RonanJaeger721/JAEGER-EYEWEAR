@@ -42,7 +42,9 @@ export function Header() {
         Skip to content
       </a>
       <div className="announcement">
-        {settings.announcement}
+        <Link href="/shop">
+          {settings.announcement} <ArrowUpRight size={12} />
+        </Link>
         <span>USD / ZW</span>
       </div>
       <header className="header">
@@ -135,7 +137,22 @@ export function Header() {
               </button>
             </div>
           </form>
-          <p className="muted">Explore a shape. Find your point of view.</p>
+          <div className="search-shortcuts">
+            <span className="eyebrow">A FEW GOOD PLACES TO START</span>
+            <div>
+              {[
+                ["Ray-Ban / $60", "/collections/ray-ban"],
+                ["The as-worn edit", "/collections/as-worn"],
+                ["Statement frames", "/collections/statement"],
+                ["Optical", "/optical"],
+              ].map(([label, url]) => (
+                <Link key={url} href={url} onClick={() => setSearch(false)}>
+                  {label}
+                  <ArrowUpRight size={16} />
+                </Link>
+              ))}
+            </div>
+          </div>
         </Modal>
       )}
     </>

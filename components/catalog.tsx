@@ -62,6 +62,7 @@ export function ProductCard({
           Quick view <Plus size={15} />
         </button>
       </div>
+      <p className="product-brand">{p.brand || "The JAEGER selection"}</p>
       <div className="product-meta">
         <Link href={`/product/${p.slug}`}>{p.name}</Link>
         <span>{v.price === null ? "Confirm price" : money(v.price)}</span>

@@ -238,5 +238,16 @@
     "source": "Supplied assets/JAEGER MEDIA/Jaeger Eyewear/WhatsApp Image 2026-10-29 at 00.27.53 (2).jpeg",
     "crop": "full photograph",
     "method": "Direct photographic crop/resize only; no generated pixels, no erased marks."
+  },
+  {
+    "asset": "/media/friends-lookbook.webp",
+    "source": "Supplied assets/WhatsApp Image 2026-11-01 at 00.46.11.jpeg",
+    "crop": {
+      "left": 0,
+      "top": 410,
+      "width": 1440,
+      "height": 1562
+    },
+    "method": "Direct photographic crop/resize only; no generated pixels, no erased marks."
   }
 ]

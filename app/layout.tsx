@@ -3,6 +3,7 @@ import { readState, storageReady } from "@/lib/db";
 import { StoreProvider } from "@/components/store-provider";
 import { Header, Footer } from "@/components/shell";
 import "./globals.css";
+import "./modern.css";
 import { introRemaining } from "@/lib/pricing";
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = {

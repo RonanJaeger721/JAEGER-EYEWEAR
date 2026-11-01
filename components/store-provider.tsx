@@ -255,6 +255,9 @@ export function BagContents({ close }: { close?: () => void }) {
     introRemaining,
   );
   const total = quote.total;
+  const hasPricedLine = lines.some(({ l, p }) =>
+    p?.variants.some((v) => v.id === l.variantId && v.price !== null),
+  );
   return (
     <div className="bag-content">
       {cart.length === 0 ? (
@@ -324,8 +327,16 @@ export function BagContents({ close }: { close?: () => void }) {
             </div>
           )}
           <div className="bag-total">
-            <span>{concepts ? "Priced selection estimate" : "Subtotal"}</span>
-            <strong>{money(total)}</strong>
+            <span>
+              {hasPricedLine
+                ? concepts
+                  ? "Priced selection estimate"
+                  : "Subtotal"
+                : "Selection price"}
+            </span>
+            <strong>
+              {hasPricedLine ? money(total) : "Confirm on enquiry"}
+            </strong>
           </div>
           <p className="muted">
             {concepts
